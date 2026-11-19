@@ -1,0 +1,135 @@
+/**
+ * JontroHaat Core Domain Types
+ */
+
+export type UserRole = "customer" | "owner" | "admin";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  image?: string | null;
+  phone?: string;
+  district?: string;
+  division?: string;
+  createdAt: string | Date;
+  updatedAt?: string | Date;
+}
+
+export type EquipmentCategory =
+  | "Tillage & Land Prep"
+  | "Irrigation & Water Pumps"
+  | "Harvesting & Threshing"
+  | "Planting & Seeding"
+  | "Crop Protection & Spraying"
+  | "Post-Harvest & Processing";
+
+export type EquipmentStatus = "pending" | "approved" | "rejected";
+
+export interface EquipmentLocation {
+  division: string;
+  district: string;
+  upazila?: string;
+  address?: string;
+}
+
+export interface Equipment {
+  _id: string;
+  title: string;
+  banglaTitle?: string;
+  description: string;
+  category: EquipmentCategory;
+  pricePerDay: number;
+  securityDeposit?: number;
+  quantity: number;
+  images: string[];
+  location: EquipmentLocation;
+  ownerId: string;
+  ownerName: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  status: EquipmentStatus;
+  isFeatured: boolean;
+  specifications?: Record<string, string>;
+  averageRating?: number;
+  totalReviews?: number;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+export type PaymentStatus = "unpaid" | "paid" | "refunded";
+
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "active"
+  | "completed"
+  | "cancelled";
+
+export interface Booking {
+  _id: string;
+  equipmentId: string;
+  equipmentTitle: string;
+  equipmentImage?: string;
+  renterId: string;
+  renterName: string;
+  renterEmail: string;
+  renterPhone: string;
+  ownerId: string;
+  startDate: string | Date;
+  endDate: string | Date;
+  durationDays: number;
+  quantity: number;
+  dailyRate: number;
+  totalPrice: number;
+  deliveryAddress: string;
+  contactNumber: string;
+  paymentStatus: PaymentStatus;
+  stripeSessionId?: string;
+  paymentIntentId?: string;
+  bookingStatus: BookingStatus;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+export interface CustomerReview {
+  _id: string;
+  equipmentId?: string;
+  equipmentTitle?: string;
+  renterId: string;
+  renterName: string;
+  renterAvatar?: string;
+  renterLocation?: string;
+  rating: number;
+  comment: string;
+  createdAt: string | Date;
+}
+
+export interface EquipmentFilterParams {
+  search?: string;
+  category?: string;
+  division?: string;
+  district?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: "price_asc" | "price_desc" | "newest" | "rating";
+  page?: number;
+  limit?: number;
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: T[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}
