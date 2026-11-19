@@ -409,7 +409,7 @@ function EquipmentContent() {
               <span className="text-muted-foreground">Active filters:</span>
               {searchParam && (
                 <Badge variant="outline" className="gap-1 bg-muted">
-                  Search: "{searchParam}"
+                  Search: &quot;{searchParam}&quot;
                   <button
                     onClick={() => updateParams({ search: null })}
                     className="hover:text-destructive cursor-pointer ml-1"

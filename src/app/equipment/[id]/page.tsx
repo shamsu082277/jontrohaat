@@ -3,12 +3,12 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { SAMPLE_EQUIPMENTS } from "@/lib/fixtures";
 import { Equipment } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatBDT, formatDate } from "@/lib/utils";
+import { formatBDT } from "@/lib/utils";
 import { useFavorites } from "@/components/shared/favorites-context";
 import { toast } from "sonner";
 import {
@@ -18,8 +18,6 @@ import {
   ShieldCheck,
   Tractor,
   Phone,
-  Mail,
-  User,
   ArrowLeft,
   Share2,
   CheckCircle2,
@@ -32,7 +30,6 @@ import {
 } from "lucide-react";
 
 export default function EquipmentDetailsPage() {
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const equipmentId = params?.id;
 
