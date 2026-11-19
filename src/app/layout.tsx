@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { manrope, hindSiliguri } from "@/lib/fonts";
 import { ThemeProvider } from "@/components/shared/theme-provider";
+import { FavoritesProvider } from "@/components/shared/favorites-context";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -31,8 +34,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster position="top-right" richColors closeButton />
+          <FavoritesProvider>
+            <div className="flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <Toaster position="top-right" richColors closeButton />
+          </FavoritesProvider>
         </ThemeProvider>
       </body>
     </html>
