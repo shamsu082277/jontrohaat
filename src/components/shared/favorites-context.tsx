@@ -15,49 +15,64 @@ const FavoritesContext = React.createContext<FavoritesContextType | undefined>(
 
 const STORAGE_KEY = "jontrohaat_favorites";
 
-export function FavoritesProvider({ children }: { children: React.ReactNode }) {
-  const [favorites, setFavorites] = React.useState<string[]>([]);
-  const [mounted, setMounted] = React.useState(false);
+let listeners: Array<() => void> = [];
+let cachedFavorites: string[] = [];
+let cachedRaw: string | null = null;
 
-  React.useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setFavorites(JSON.parse(stored));
-      }
-    } catch {
-      // Ignore local storage parse errors
+function getSnapshot(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw !== cachedRaw) {
+      cachedRaw = raw;
+      cachedFavorites = raw ? JSON.parse(raw) : [];
     }
-    setMounted(true);
+    return cachedFavorites;
+  } catch {
+    return [];
+  }
+}
+
+const getServerSnapshot = () => [];
+
+function subscribe(onStoreChange: () => void) {
+  listeners.push(onStoreChange);
+  window.addEventListener("storage", onStoreChange);
+  return () => {
+    listeners = listeners.filter((l) => l !== onStoreChange);
+    window.removeEventListener("storage", onStoreChange);
+  };
+}
+
+function notify() {
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+export function FavoritesProvider({ children }: { children: React.ReactNode }) {
+  const favorites = React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  const toggleFavorite = React.useCallback((id: string, title?: string) => {
+    const current = getSnapshot();
+    const exists = current.includes(id);
+    const next = exists ? current.filter((item) => item !== id) : [...current, id];
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+    notify();
+    if (exists) {
+      toast.info(title ? `${title} পছন্দের তালিকা থেকে সরানো হয়েছে` : "Removed from favorites");
+    } else {
+      toast.success(title ? `${title} পছন্দের তালিকায় যুক্ত হয়েছে` : "Added to favorites");
+    }
   }, []);
 
-  const toggleFavorite = React.useCallback(
-    (id: string, title?: string) => {
-      setFavorites((prev) => {
-        const exists = prev.includes(id);
-        const next = exists ? prev.filter((item) => item !== id) : [...prev, id];
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        } catch {
-          // ignore
-        }
-        if (exists) {
-          toast.info(title ? `${title} পছন্দের তালিকা থেকে সরানো হয়েছে` : "Removed from favorites");
-        } else {
-          toast.success(title ? `${title} পছন্দের তালিকায় যুক্ত হয়েছে` : "Added to favorites");
-        }
-        return next;
-      });
-    },
-    []
-  );
-
   const isFavorite = React.useCallback(
-    (id: string) => {
-      if (!mounted) return false;
-      return favorites.includes(id);
-    },
-    [favorites, mounted]
+    (id: string) => favorites.includes(id),
+    [favorites]
   );
 
   return (

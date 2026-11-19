@@ -12,7 +12,6 @@ import {
   BANGLADESH_DISTRICTS,
   BANGLADESH_DIVISIONS,
 } from "@/lib/fixtures";
-import { Equipment, EquipmentCategory } from "@/types";
 import {
   Search,
   SlidersHorizontal,
@@ -21,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   FilterX,
-  Layers,
 } from "lucide-react";
 
 const ITEMS_PER_PAGE = 6;

@@ -22,7 +22,6 @@ import {
   Clock,
   Sparkles,
   Tractor,
-  Layers,
   CheckCircle2,
   PhoneCall,
   Star,
@@ -521,7 +520,7 @@ export default function HomePage() {
                   </div>
 
                   <p className="text-xs text-foreground/90 font-bengali leading-relaxed italic">
-                    "{review.comment}"
+                    &ldquo;{review.comment}&rdquo;
                   </p>
                 </div>
 
