@@ -1,5 +1,5 @@
 import { Booking, User, Equipment } from "@/types";
-import { SAMPLE_EQUIPMENTS } from "../fixtures";
+import { SAMPLE_EQUIPMENTS } from "./fixtures";
 
 export const DEMO_USERS: User[] = [
   {

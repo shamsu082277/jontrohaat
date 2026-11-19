@@ -64,7 +64,7 @@ export default function AddEquipmentPage() {
         <div>
           <h1 className="text-2xl font-black text-foreground">Add New Agricultural Equipment</h1>
           <p className="text-xs text-muted-foreground font-bengali">
-            নতুন যন্ত্রপাতি তালিকাভুক্ত করুন। প্রাথমিক অবস্থায় স্ট্যাটাস 'Pending' থাকবে।
+            নতুন যন্ত্রপাতি তালিকাভুক্ত করুন। প্রাথমিক অবস্থায় স্ট্যাটাস &apos;Pending&apos; থাকবে।
           </p>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function AddEquipmentPage() {
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2.5">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>
-            <strong>অনুমোদন শর্ত:</strong> নতুন যন্ত্রপাতি সাবমিট করার পর স্বয়ংক্রিয়ভাবে 'Pending' থাকবে। কোনো মালিক নিজের যন্ত্র নিজে অনুমোদন করতে পারবেন না। এডমিন যাচাই করে অনুমোদন করবেন।
+            <strong>অনুমোদন শর্ত:</strong> নতুন যন্ত্রপাতি সাবমিট করার পর স্বয়ংক্রিয়ভাবে &apos;Pending&apos; থাকবে। কোনো মালিক নিজের যন্ত্র নিজে অনুমোদন করতে পারবেন না। এডমিন যাচাই করে অনুমোদন করবেন।
           </span>
         </div>
 

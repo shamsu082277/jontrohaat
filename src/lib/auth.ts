@@ -3,9 +3,6 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { jwt } from "better-auth/plugins";
 import clientPromise, { getDatabase } from "./mongodb";
 
-let _auth: ReturnType<typeof betterAuth> | null = null;
-let _authPromise: Promise<ReturnType<typeof betterAuth>> | null = null;
-
 async function createAuth() {
   const db = await getDatabase();
   return betterAuth({
@@ -62,7 +59,12 @@ async function createAuth() {
   });
 }
 
-export async function getAuth() {
+type AuthInstance = Awaited<ReturnType<typeof createAuth>>;
+
+let _auth: AuthInstance | null = null;
+let _authPromise: Promise<AuthInstance> | null = null;
+
+export async function getAuth(): Promise<AuthInstance> {
   if (_auth) return _auth;
   if (_authPromise) return _authPromise;
   _authPromise = createAuth().then((instance) => {

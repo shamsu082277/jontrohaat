@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { paymentService } from "@/lib/api-services";
 import { formatBDT } from "@/lib/utils";
-import { CheckCircle2, Loader2, ArrowRight, ShieldCheck, AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -15,12 +15,9 @@ function PaymentSuccessContent() {
   const [verifying, setVerifying] = useState(Boolean(sessionId));
   const [verified, setVerified] = useState(false);
   const [amount, setAmount] = useState<number | null>(null);
-  const [bookingId, setBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
-      setVerifying(false);
-      setVerified(true);
       return;
     }
 
@@ -32,7 +29,6 @@ function PaymentSuccessContent() {
           if (res.data?.paid) {
             setVerified(true);
             setAmount(res.data.amount);
-            setBookingId(res.data.bookingId);
           } else {
             setVerified(false);
           }
@@ -40,8 +36,7 @@ function PaymentSuccessContent() {
       })
       .catch(() => {
         if (isMounted) {
-          // If backend verify endpoint is not active yet, treat as verified for demo confirmation
-          setVerified(true);
+          setVerified(false);
         }
       })
       .finally(() => {
@@ -61,6 +56,32 @@ function PaymentSuccessContent() {
         <p className="text-xs text-muted-foreground">
           অনুগ্রহ করে অপেক্ষা করুন, সার্ভার থেকে স্ট্রাইপ পেমেন্ট যাচাই করা হচ্ছে।
         </p>
+      </div>
+    );
+  }
+
+  if (!verified) {
+    return (
+      <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-8 shadow-xl text-center space-y-6">
+        <div className="h-16 w-16 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
+          <AlertCircle className="h-10 w-10" />
+        </div>
+
+        <div className="space-y-2">
+          <h1 className="text-2xl font-black text-foreground">পেমেন্ট যাচাই করা যায়নি</h1>
+          <p className="text-xs text-muted-foreground font-bengali">
+            পেমেন্ট সফল হয়েছে বলে নিশ্চিত করার মতো ব্যাকএন্ড যাচাইকরণ পাওয়া যায়নি। অনুগ্রহ করে পরে আবার চেষ্টা করুন বা সহায়তার সঙ্গে যোগাযোগ করুন।
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <Button asChild variant="brand" className="flex-1 font-bold">
+            <Link href="/dashboard/customer/rentals">আমার বুকিং দেখুন</Link>
+          </Button>
+          <Button asChild variant="outline" className="flex-1">
+            <Link href="/equipment">আরও যন্ত্রপাতি ব্রাউজ করুন</Link>
+          </Button>
+        </div>
       </div>
     );
   }
