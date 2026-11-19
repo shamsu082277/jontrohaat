@@ -18,20 +18,36 @@ export interface User {
 }
 
 export type EquipmentCategory =
-  | "Tillage & Land Prep"
-  | "Irrigation & Water Pumps"
-  | "Harvesting & Threshing"
-  | "Planting & Seeding"
-  | "Crop Protection & Spraying"
-  | "Post-Harvest & Processing";
+  | "Power Tillers"
+  | "Tractors"
+  | "Harvesters"
+  | "Irrigation Pumps"
+  | "Sprayers"
+  | "Threshers";
 
 export type EquipmentStatus = "pending" | "approved" | "rejected";
+
+export type RentalType = "per_day" | "per_hour" | "per_acre";
 
 export interface EquipmentLocation {
   division: string;
   district: string;
   upazila?: string;
   address?: string;
+}
+
+export interface EquipmentOwner {
+  id: string;
+  name: string;
+  banglaName?: string;
+  phone: string;
+  email?: string;
+  district: string;
+  division: string;
+  verified: boolean;
+  memberSince: string;
+  responseRate?: string;
+  avatar?: string;
 }
 
 export interface Equipment {
@@ -41,14 +57,21 @@ export interface Equipment {
   description: string;
   category: EquipmentCategory;
   pricePerDay: number;
+  rentalType?: RentalType;
   securityDeposit?: number;
   quantity: number;
+  isAvailable?: boolean;
+  condition?: string;
+  brand?: string;
+  model?: string;
   images: string[];
   location: EquipmentLocation;
   ownerId: string;
   ownerName: string;
   ownerEmail?: string;
   ownerPhone?: string;
+  owner?: EquipmentOwner;
+  terms?: string[];
   status: EquipmentStatus;
   isFeatured: boolean;
   specifications?: Record<string, string>;
@@ -103,6 +126,9 @@ export interface CustomerReview {
   renterLocation?: string;
   rating: number;
   comment: string;
+  date: string;
+  cropType?: string;
+  isDemo?: boolean;
   createdAt: string | Date;
 }
 
@@ -111,6 +137,8 @@ export interface EquipmentFilterParams {
   category?: string;
   division?: string;
   district?: string;
+  rentalType?: string;
+  availability?: string;
   minPrice?: number;
   maxPrice?: number;
   sortBy?: "price_asc" | "price_desc" | "newest" | "rating";
