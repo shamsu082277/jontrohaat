@@ -1,9 +1,9 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { jwt } from "better-auth/plugins";
-import clientPromise, { getDatabase } from "./mongodb";
 
 async function createAuth() {
+  const { default: clientPromise, getDatabase } = await import("./mongodb");
   const db = await getDatabase();
   return betterAuth({
     baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
