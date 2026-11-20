@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { SAMPLE_EQUIPMENTS } from "@/lib/fixtures";
 import { Equipment } from "@/types";
+import { bookingService, equipmentService, paymentService } from "@/lib/api-services";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
@@ -32,9 +32,23 @@ import {
 export default function EquipmentDetailsPage() {
   const params = useParams<{ id: string }>();
   const equipmentId = params?.id;
+  const [equipment, setEquipment] = useState<Equipment | undefined>();
+  const [loadingEquipment, setLoadingEquipment] = useState(true);
 
-  const equipment: Equipment | undefined = useMemo(() => {
-    return SAMPLE_EQUIPMENTS.find((e) => e._id === equipmentId);
+  useEffect(() => {
+    let active = true;
+    setLoadingEquipment(true);
+    equipmentService.getById(equipmentId)
+      .then((response) => {
+        if (active) setEquipment(response.data);
+      })
+      .catch(() => {
+        if (active) setEquipment(undefined);
+      })
+      .finally(() => {
+        if (active) setLoadingEquipment(false);
+      });
+    return () => { active = false; };
   }, [equipmentId]);
 
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -62,6 +76,7 @@ export default function EquipmentDetailsPage() {
   const [startDate, setStartDate] = useState(tomorrow);
   const [endDate, setEndDate] = useState(dayAfterTomorrow);
   const [quantity, setQuantity] = useState(1);
+  const [areaAcres, setAreaAcres] = useState(1);
   const [contactNumber, setContactNumber] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
@@ -79,15 +94,11 @@ export default function EquipmentDetailsPage() {
 
   const subtotal = useMemo(() => {
     if (!equipment) return 0;
-    return equipment.pricePerDay * durationDays * quantity;
-  }, [equipment, durationDays, quantity]);
+    const rentalUnits = equipment.rentalType === "per_acre" ? areaAcres : durationDays;
+    return equipment.pricePerDay * rentalUnits * quantity;
+  }, [equipment, areaAcres, durationDays, quantity]);
 
-  const securityDeposit = useMemo(() => {
-    if (!equipment) return 0;
-    return (equipment.securityDeposit || 2000) * quantity;
-  }, [equipment, quantity]);
-
-  const estimatedTotal = subtotal + securityDeposit;
+  const estimatedTotal = subtotal;
 
   // Handle Share link
   const handleShare = () => {
@@ -98,7 +109,7 @@ export default function EquipmentDetailsPage() {
   };
 
   // Booking Form Submission
-  const handleBookingSubmit = (e: React.FormEvent) => {
+  const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!contactNumber.trim()) {
@@ -123,18 +134,36 @@ export default function EquipmentDetailsPage() {
       return;
     }
 
-    setIsSubmittingBooking(true);
+    if (equipment.rentalType === "per_acre" && (!Number.isFinite(areaAcres) || areaAcres <= 0)) {
+      toast.error("ভাড়ার জমির পরিমাণ একরে লিখুন");
+      return;
+    }
 
-    // Simulate booking creation with contract preview
-    setTimeout(() => {
+    setIsSubmittingBooking(true);
+    try {
+      const booking = await bookingService.create({
+        equipmentId: equipment._id,
+        startDate: new Date(`${startDate}T00:00:00`).toISOString(),
+        endDate: new Date(`${endDate}T00:00:00`).toISOString(),
+        quantity,
+        contactNumber: cleanNumber,
+        deliveryAddress: deliveryAddress.trim(),
+        notes: additionalNotes.trim() || undefined,
+        ...(equipment.rentalType === "per_acre" ? { areaAcres } : {}),
+      });
+      if (!booking.data?._id) throw new Error(booking.message || "Booking could not be created");
+      const checkout = await paymentService.createCheckoutSession(booking.data._id);
+      if (!checkout.data?.checkoutUrl) throw new Error(checkout.message || "Payment checkout is unavailable");
+      window.location.assign(checkout.data.checkoutUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "বুকিং তৈরি করা যায়নি");
       setIsSubmittingBooking(false);
-      setBookingModalOpen(false);
-      toast.success(
-        `বুকিং অনুরোধ সফলভাবে পাঠানো হয়েছে! মালিক (${equipment?.ownerName}) শীঘ্রই আপনার সাথে যোগাযোগ করবেন।`,
-        { duration: 5000 }
-      );
-    }, 700);
+    }
   };
+
+  if (loadingEquipment) {
+    return <div className="container-haat py-20 text-center text-sm text-muted-foreground">যন্ত্রপাতির তথ্য লোড হচ্ছে...</div>;
+  }
 
   if (!equipment) {
     return (
@@ -509,12 +538,27 @@ export default function EquipmentDetailsPage() {
                   <input
                     type="date"
                     required
-                    min={new Date().toISOString().split("T")[0]}
+                    min={tomorrow}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="h-10 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand-leaf/40"
                   />
                 </div>
+
+                {equipment.rentalType === "per_acre" && (
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-foreground">Land area (acres)</label>
+                    <input
+                      type="number"
+                      min={0.1}
+                      step={0.1}
+                      required
+                      value={areaAcres}
+                      onChange={(e) => setAreaAcres(Number(e.target.value))}
+                      className="h-10 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand-leaf/40"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <label className="font-semibold text-foreground flex items-center gap-1">
@@ -609,14 +653,9 @@ export default function EquipmentDetailsPage() {
                 <div className="space-y-1 text-muted-foreground pt-1">
                   <div className="flex justify-between">
                     <span>
-                      Daily Rate ({formatBDT(equipment.pricePerDay)} × {durationDays} day(s) × {quantity} unit)
+                      Rate ({formatBDT(equipment.pricePerDay)} × {equipment.rentalType === "per_acre" ? `${areaAcres} acre(s)` : `${durationDays} rental unit(s)`} × {quantity} machine(s))
                     </span>
                     <span className="font-semibold text-foreground">{formatBDT(subtotal)}</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span>Refundable Security Deposit ({quantity} unit)</span>
-                    <span className="font-semibold text-foreground">{formatBDT(securityDeposit)}</span>
                   </div>
 
                   <div className="flex justify-between border-t border-border pt-1.5 text-sm font-black text-brand-forest dark:text-brand-fresh">

@@ -60,17 +60,19 @@ export function ImageUpload({
       // Backend upload (which securely communicates with ImgBB without exposing keys)
       const res = await imageUploadService.upload(file);
       if (res.data?.url) {
+        URL.revokeObjectURL(objectUrl);
+        setPreview(res.data.url);
         onChange(res.data.url);
         toast.success("ছবি সফলভাবে আপলোড হয়েছে!");
       } else {
-        // Fallback for demo when backend is offline
-        onChange(objectUrl);
-        toast.info("ছবি নির্বাচিত হয়েছে (লোকাল প্রিভিউ প্রস্তুত)");
+        URL.revokeObjectURL(objectUrl);
+        setPreview(value || null);
+        setError(res.message || "ছবি আপলোড করা যায়নি");
       }
-    } catch {
-      // Fallback for offline demo so user workflow never breaks
-      onChange(objectUrl);
-      toast.info("লোকাল প্রিভিউ হিসেবে সংরক্ষিত হয়েছে (সার্ভার সংযুক্ত হলে সরাসরি হোস্ট হবে)");
+    } catch (uploadError) {
+      URL.revokeObjectURL(objectUrl);
+      setPreview(value || null);
+      setError(uploadError instanceof Error ? uploadError.message : "ছবি আপলোড করা যায়নি");
     } finally {
       setLoading(false);
     }
@@ -92,7 +94,7 @@ export function ImageUpload({
 
       {preview ? (
         <div className="relative aspect-[16/9] w-full max-w-md overflow-hidden rounded-2xl border border-border bg-muted">
-          <Image src={preview} alt="Uploaded preview" fill className="object-cover" />
+          <Image src={preview} alt="Uploaded preview" fill unoptimized className="object-cover" />
           {loading && (
             <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white gap-2 backdrop-blur-xs">
               <Loader2 className="h-6 w-6 animate-spin text-brand-fresh" />

@@ -81,7 +81,7 @@ export interface Equipment {
   updatedAt: string | Date;
 }
 
-export type PaymentStatus = "unpaid" | "paid" | "refunded";
+export type PaymentStatus = "pending" | "unpaid" | "paid" | "failed" | "refunded";
 
 export type BookingStatus =
   | "pending"
@@ -99,13 +99,16 @@ export interface Booking {
   renterName: string;
   renterEmail: string;
   renterPhone: string;
+  customerId?: string;
   ownerId: string;
   startDate: string | Date;
   endDate: string | Date;
   durationDays: number;
+  rentalDuration?: number;
   quantity: number;
   dailyRate: number;
   totalPrice: number;
+  totalAmount?: number;
   deliveryAddress: string;
   contactNumber: string;
   paymentStatus: PaymentStatus;
@@ -135,6 +138,7 @@ export interface CustomerReview {
 export interface EquipmentFilterParams {
   search?: string;
   category?: string;
+  location?: string;
   division?: string;
   district?: string;
   rentalType?: string;
@@ -154,10 +158,11 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface PaginatedResponse<T> {
-  success: boolean;
-  data: T[];
-  total: number;
-  page: number;
-  totalPages: number;
-  limit: number;
+  items: T[];
+  pagination: {
+    total: number;
+    page: number;
+    pages: number;
+    limit: number;
+  };
 }
