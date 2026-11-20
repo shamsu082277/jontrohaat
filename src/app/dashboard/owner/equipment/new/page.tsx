@@ -10,6 +10,7 @@ import { EquipmentCategory } from "@/types";
 import { Tractor, Sparkles, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { equipmentService } from "@/lib/api-services";
 
 export default function AddEquipmentPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function AddEquipmentPage() {
   const [banglaTitle, setBanglaTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<EquipmentCategory>("Power Tillers");
-  const [rentalType, setRentalType] = useState<"per_day" | "per_hour">("per_day");
+  const [rentalType, setRentalType] = useState<"per_day" | "per_hour" | "per_acre">("per_day");
   const [pricePerDay, setPricePerDay] = useState("");
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -32,24 +33,37 @@ export default function AddEquipmentPage() {
   const [terms, setTerms] = useState("জ্বালানি খরচ (ডিজেল) ভাড়াগ্রহীতার। জাতীয় পরিচয়পত্র (NID) কপি আবশ্যক।");
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim() || !pricePerDay || !quantity || !address.trim()) {
+    if (!title.trim() || !description.trim() || !pricePerDay || !quantity || !address.trim()) {
       toast.error("অনুগ্রহ করে সকল আবশ্যক তথ্য পূরণ করুন");
       return;
     }
 
     setSubmitting(true);
-
-    setTimeout(() => {
-      setSubmitting(false);
-      toast.success(
-        "যন্ত্রপাতি সফলভাবে সাবমিট হয়েছে! স্ট্যাটাস: Pending (এডমিন অনুমোদনের পর মার্কেটপ্লেসে প্রদর্শিত হবে)।",
-        { duration: 6000 }
-      );
+    try {
+      const response = await equipmentService.create({
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        location: { division, district, address: address.trim() },
+        rentalPrice: Number(pricePerDay),
+        rentalType,
+        availableQuantity: Number(quantity),
+        condition,
+        brand: brand.trim() || undefined,
+        model: model.trim() || undefined,
+        image,
+        rentalTerms: terms.trim(),
+      });
+      if (!response.success) throw new Error(response.message || "Equipment could not be submitted");
+      toast.success("যন্ত্রপাতি সফলভাবে সাবমিট হয়েছে! স্ট্যাটাস: Pending");
       router.push("/dashboard/owner/equipment");
-    }, 700);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "যন্ত্রপাতি সাবমিট করা যায়নি");
+      setSubmitting(false);
+    }
   };
 
   return (
