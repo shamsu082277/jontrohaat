@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { SAMPLE_EQUIPMENTS } from "@/lib/fixtures";
+import { Equipment } from "@/types";
+import { equipmentService, ownerService } from "@/lib/api-services";
 import { formatBDT } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,17 +12,28 @@ import { PlusCircle, Edit, Trash2, ShieldAlert, ArrowRight } from "lucide-react"
 import { toast } from "sonner";
 
 export default function OwnerEquipmentPage() {
-  const [equipmentList, setEquipmentList] = useState(
-    SAMPLE_EQUIPMENTS.slice(0, 5).map((eq, i) => ({
-      ...eq,
-      status: i === 4 ? "pending" : ("approved" as const),
-    }))
-  );
+  const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleDelete = (id: string, title: string) => {
+  const loadEquipment = () => {
+    setLoading(true);
+    ownerService.getEquipment()
+      .then((response) => setEquipmentList(response.data || []))
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Equipment could not be loaded"))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadEquipment(); }, []);
+
+  const handleDelete = async (id: string, title: string) => {
     if (confirm(`আপনি কি নিশ্চিত যে "${title}" তালিকা থেকে মুছে ফেলতে চান?`)) {
-      setEquipmentList((prev) => prev.filter((item) => item._id !== id));
-      toast.success("যন্ত্রপাতি সফলভাবে মুছে ফেলা হয়েছে");
+      try {
+        await equipmentService.delete(id);
+        setEquipmentList((prev) => prev.filter((item) => item._id !== id));
+        toast.success("যন্ত্রপাতি সফলভাবে মুছে ফেলা হয়েছে");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "যন্ত্রপাতি মুছতে পারেনি");
+      }
     }
   };
 
@@ -56,7 +68,11 @@ export default function OwnerEquipmentPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {equipmentList.map((eq) => (
+              {loading ? (
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
+              ) : equipmentList.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">আপনার কোনো equipment listing নেই।</td></tr>
+              ) : equipmentList.map((eq) => (
                 <tr key={eq._id} className="hover:bg-muted/30 transition-colors">
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">

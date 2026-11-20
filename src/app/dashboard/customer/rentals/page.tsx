@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { DEMO_RENTALS } from "@/lib/dashboard-fixtures";
+import { Booking } from "@/types";
+import { bookingService, paymentService } from "@/lib/api-services";
 import { formatBDT, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,14 +17,33 @@ import {
   ArrowRight,
   Tractor,
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function CustomerRentalsPage() {
-  const [rentals] = useState(DEMO_RENTALS);
+  const [rentals, setRentals] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    bookingService.getMyRentals()
+      .then((response) => setRentals(response.data || []))
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Bookings could not be loaded"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handlePay = async (bookingId: string) => {
+    try {
+      const response = await paymentService.createCheckoutSession(bookingId);
+      if (!response.data?.checkoutUrl) throw new Error(response.message || "Stripe checkout is unavailable");
+      window.location.assign(response.data.checkoutUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Payment could not be started");
+    }
+  };
 
   const totalRentals = rentals.length;
   const activeRentals = rentals.filter((r) => r.bookingStatus === "active").length;
   const completedRentals = rentals.filter((r) => r.bookingStatus === "completed").length;
-  const pendingPayments = rentals.filter((r) => r.paymentStatus === "unpaid").length;
+  const pendingPayments = rentals.filter((r) => r.paymentStatus === "pending").length;
 
   return (
     <div className="space-y-8">
@@ -88,7 +108,9 @@ export default function CustomerRentalsPage() {
           </Button>
         </div>
 
-        {rentals.length > 0 ? (
+        {loading ? (
+          <div className="p-8 text-center text-xs text-muted-foreground">লোড হচ্ছে...</div>
+        ) : rentals.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border">
@@ -165,11 +187,9 @@ export default function CustomerRentalsPage() {
                     </td>
 
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      {rental.paymentStatus === "unpaid" ? (
-                        <Button asChild size="sm" variant="harvest" className="text-xs font-bold h-8">
-                          <Link href={`/payment/success?session_id=demo_session_${rental._id}`}>
-                            <span>Pay ৳</span>
-                          </Link>
+                      {rental.paymentStatus === "pending" && rental.bookingStatus === "pending" ? (
+                        <Button size="sm" variant="harvest" className="text-xs font-bold h-8" onClick={() => handlePay(rental._id)}>
+                          <span>Pay ৳</span>
                         </Button>
                       ) : (
                         <Button asChild size="sm" variant="outline" className="text-xs h-8">

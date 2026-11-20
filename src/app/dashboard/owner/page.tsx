@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { SAMPLE_EQUIPMENTS } from "@/lib/fixtures";
-import { OWNER_MONTHLY_EARNINGS, DEMO_RENTALS } from "@/lib/dashboard-fixtures";
+import { Equipment, Booking } from "@/types";
+import { bookingService, ownerService } from "@/lib/api-services";
 import { formatBDT } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Wrench,
   CheckCircle2,
@@ -28,13 +29,27 @@ import {
 } from "recharts";
 
 export default function OwnerOverviewPage() {
-  const [equipmentList] = useState(SAMPLE_EQUIPMENTS.slice(0, 4));
+  const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [analytics, setAnalytics] = useState<{
+    totalEquipment: number; approvedEquipment: number; pendingEquipment: number;
+    totalRentals: number; completedRentals: number; totalEarnings: number;
+    monthlyEarnings: { _id: string; earnings: number }[];
+  }>();
+  const [loading, setLoading] = useState(true);
 
-  const totalEquipment = 4;
-  const approvedEquipment = 3;
-  const pendingEquipment = 1;
-  const completedRentals = 18;
-  const totalEarnings = 74500;
+  useEffect(() => {
+    Promise.all([ownerService.getEquipment(), bookingService.getOwnerRentals(), ownerService.getAnalytics()])
+      .then(([equipmentResponse, bookingResponse, analyticsResponse]) => {
+        setEquipmentList(equipmentResponse.data || []);
+        setBookings(bookingResponse.data || []);
+        setAnalytics(analyticsResponse.data);
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Dashboard data could not be loaded"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const monthlyEarnings = analytics?.monthlyEarnings.map((item) => ({ month: item._id, earnings: item.earnings })) || [];
 
   return (
     <div className="space-y-8">
@@ -61,7 +76,7 @@ export default function OwnerOverviewPage() {
             <span className="text-xs font-semibold">Total Machines</span>
             <Wrench className="h-4 w-4 text-brand-forest dark:text-brand-fresh" />
           </div>
-          <div className="text-2xl font-black text-foreground">{totalEquipment}</div>
+          <div className="text-2xl font-black text-foreground">{analytics?.totalEquipment ?? "—"}</div>
           <div className="text-[10px] text-muted-foreground">তালিকাভুক্ত যন্ত্র</div>
         </div>
 
@@ -70,7 +85,7 @@ export default function OwnerOverviewPage() {
             <span className="text-xs font-semibold">Approved</span>
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-black text-emerald-600">{approvedEquipment}</div>
+          <div className="text-2xl font-black text-emerald-600">{analytics?.approvedEquipment ?? "—"}</div>
           <div className="text-[10px] text-muted-foreground">ভাড়ার জন্য অনুমোদিত</div>
         </div>
 
@@ -80,7 +95,7 @@ export default function OwnerOverviewPage() {
             <Clock className="h-4 w-4 text-amber-500" />
           </div>
           <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
-            {pendingEquipment}
+            {analytics?.pendingEquipment ?? "—"}
           </div>
           <div className="text-[10px] text-muted-foreground">এডমিন রিভিউতে রয়েছে</div>
         </div>
@@ -90,7 +105,7 @@ export default function OwnerOverviewPage() {
             <span className="text-xs font-semibold">Completed Rentals</span>
             <Calendar className="h-4 w-4 text-brand-leaf" />
           </div>
-          <div className="text-2xl font-black text-brand-leaf">{completedRentals}</div>
+          <div className="text-2xl font-black text-brand-leaf">{analytics?.completedRentals ?? "—"}</div>
           <div className="text-[10px] text-muted-foreground">সফল ভাড়া সম্পন্ন</div>
         </div>
 
@@ -100,7 +115,7 @@ export default function OwnerOverviewPage() {
             <DollarSign className="h-4 w-4" />
           </div>
           <div className="text-2xl font-black text-brand-forest dark:text-brand-fresh">
-            {formatBDT(totalEarnings)}
+            {formatBDT(analytics?.totalEarnings || 0)}
           </div>
           <div className="text-[10px] text-muted-foreground">চলতি মৌসুমে মোট আয়</div>
         </div>
@@ -118,14 +133,12 @@ export default function OwnerOverviewPage() {
               কৃষি মৌসুমে যন্ত্রপাতি ভাড়ার আয় বিশ্লেষণ
             </p>
           </div>
-          <Badge variant="leaf" className="text-xs font-bold">
-            +32% This Harvest Season
-          </Badge>
+          <Badge variant="leaf" className="text-xs font-bold">{analytics?.totalRentals ?? 0} rentals</Badge>
         </div>
 
         <div className="h-64 w-full pt-2">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={OWNER_MONTHLY_EARNINGS}>
+            <AreaChart data={monthlyEarnings}>
               <defs>
                 <linearGradient id="ownerColor" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#174C32" stopOpacity={0.6} />
@@ -173,14 +186,15 @@ export default function OwnerOverviewPage() {
             </Link>
           </div>
           <div className="space-y-2.5">
-            {equipmentList.map((eq, i) => (
+            {equipmentList.slice(0, 4).map((eq) => (
               <div key={eq._id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
                 <span className="font-semibold text-foreground line-clamp-1">{eq.title}</span>
-                <Badge variant={i === 0 ? "available" : i === 3 ? "unavailable" : "forest"} className="text-[10px]">
-                  {i === 3 ? "Pending" : "Approved"}
+                <Badge variant={eq.status === "approved" ? "available" : "unavailable"} className="text-[10px]">
+                  {eq.status}
                 </Badge>
               </div>
             ))}
+            {!loading && equipmentList.length === 0 && <p className="text-xs text-muted-foreground">No equipment listings yet.</p>}
           </div>
         </div>
 
@@ -194,7 +208,7 @@ export default function OwnerOverviewPage() {
             </Link>
           </div>
           <div className="space-y-2.5">
-            {DEMO_RENTALS.slice(0, 3).map((b) => (
+            {bookings.slice(0, 3).map((b) => (
               <div key={b._id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
                 <div>
                   <div className="font-semibold text-foreground">{b.renterName}</div>
@@ -206,6 +220,7 @@ export default function OwnerOverviewPage() {
                 </div>
               </div>
             ))}
+            {!loading && bookings.length === 0 && <p className="text-xs text-muted-foreground">No bookings yet.</p>}
           </div>
         </div>
       </div>

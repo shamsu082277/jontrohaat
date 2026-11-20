@@ -1,22 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import { DEMO_RENTALS } from "@/lib/dashboard-fixtures";
+import { useState, useEffect } from "react";
+import { Booking } from "@/types";
+import { bookingService } from "@/lib/api-services";
 import { formatBDT, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, CheckCircle, Clock } from "lucide-react";
+import { Phone } from "lucide-react";
 import { toast } from "sonner";
 
 export default function OwnerRentalsPage() {
-  const [rentals, setRentals] = useState(DEMO_RENTALS);
+  const [rentals, setRentals] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleStatusChange = (id: string, newStatus: "active" | "completed") => {
-    setRentals((prev) =>
-      prev.map((r) => (r._id === id ? { ...r, bookingStatus: newStatus } : r))
-    );
-    toast.success(`বুকিং স্ট্যাটাস পরিবর্তন হয়েছে: ${newStatus}`);
+  useEffect(() => {
+    bookingService.getOwnerRentals()
+      .then((response) => setRentals(response.data || []))
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Bookings could not be loaded"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleStatusChange = async (id: string, newStatus: "active" | "completed") => {
+    try {
+      const response = await bookingService.updateOwnerStatus(id, newStatus);
+      if (response.data) setRentals((prev) => prev.map((r) => r._id === id ? response.data! : r));
+      toast.success(`বুকিং স্ট্যাটাস পরিবর্তন হয়েছে: ${newStatus}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Booking status could not be updated");
+    }
   };
 
   return (
@@ -44,7 +55,11 @@ export default function OwnerRentalsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {rentals.map((r) => (
+              {loading ? (
+                <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
+              ) : rentals.length === 0 ? (
+                <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">কোনো booking পাওয়া যায়নি।</td></tr>
+              ) : rentals.map((r) => (
                 <tr key={r._id} className="hover:bg-muted/30 transition-colors">
                   <td className="py-3.5 px-4">
                     <div className="font-bold text-foreground">{r.renterName}</div>
@@ -85,7 +100,7 @@ export default function OwnerRentalsPage() {
                   </td>
 
                   <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                    {r.bookingStatus === "pending" && (
+                    {r.bookingStatus === "confirmed" && (
                       <Button size="sm" variant="brand" onClick={() => handleStatusChange(r._id, "active")} className="h-7 text-[11px]">
                         হস্তান্তর (Deliver)
                       </Button>

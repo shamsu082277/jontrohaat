@@ -135,11 +135,12 @@ export default function AddEquipmentPage() {
               <label className="font-semibold text-foreground">ভাড়ার ধরন (Rental Type) *</label>
               <select
                 value={rentalType}
-                onChange={(e) => setRentalType(e.target.value as "per_day" | "per_hour")}
+                onChange={(e) => setRentalType(e.target.value as "per_day" | "per_hour" | "per_acre")}
                 className="h-10 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand-leaf/40"
               >
                 <option value="per_day">Per Day (দৈনিক)</option>
                 <option value="per_hour">Per Hour (প্রতি ঘণ্টা)</option>
+                <option value="per_acre">Per Acre (প্রতি একর)</option>
               </select>
             </div>
           </div>

@@ -1,22 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { DEMO_RENTALS } from "@/lib/dashboard-fixtures";
+import { useState, useEffect } from "react";
 import { formatBDT, formatDate } from "@/lib/utils";
 import { Booking } from "@/types";
+import { bookingService } from "@/lib/api-services";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Calendar, User, Phone, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminRentalsPage() {
-  const [rentals, setRentals] = useState<Booking[]>(DEMO_RENTALS);
+  const [rentals, setRentals] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleUpdateStatus = (id: string, status: "pending" | "active" | "completed" | "cancelled") => {
-    setRentals((prev) =>
-      prev.map((r) => (r._id === id ? { ...r, bookingStatus: status } : r))
-    );
-    toast.success(`অর্ডার স্ট্যাটাস আপডেট হয়েছে: ${status.toUpperCase()}`);
+  useEffect(() => {
+    bookingService.getAllRentalsAdmin()
+      .then((response) => setRentals(response.data || []))
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Bookings could not be loaded"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleUpdateStatus = async (id: string, status: Booking["bookingStatus"]) => {
+    try {
+      const response = await bookingService.updateAdminStatus(id, status);
+      if (response.data) setRentals((prev) => prev.map((r) => r._id === id ? response.data! : r));
+      toast.success(`অর্ডার স্ট্যাটাস আপডেট হয়েছে: ${status.toUpperCase()}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Booking status could not be updated");
+    }
   };
 
   return (
@@ -43,7 +54,11 @@ export default function AdminRentalsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {rentals.map((r) => (
+              {loading ? (
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
+              ) : rentals.length === 0 ? (
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">কোনো booking পাওয়া যায়নি।</td></tr>
+              ) : rentals.map((r) => (
                 <tr key={r._id} className="hover:bg-muted/30 transition-colors">
                   <td className="py-3.5 px-4">
                     <div className="font-bold text-foreground">{r.renterName}</div>
@@ -88,10 +103,11 @@ export default function AdminRentalsPage() {
                   <td className="py-3.5 px-4 text-right whitespace-nowrap">
                     <select
                       value={r.bookingStatus}
-                      onChange={(e) => handleUpdateStatus(r._id, e.target.value as "pending" | "active" | "completed" | "cancelled")}
+                      onChange={(e) => handleUpdateStatus(r._id, e.target.value as Booking["bookingStatus"])}
                       className="h-8 rounded-lg border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-brand-leaf/40 font-medium"
                     >
-                      <option value="pending">Pending</option>
+                      <option value="pending" disabled>Pending (unpaid)</option>
+                      <option value="confirmed">Confirmed</option>
                       <option value="active">Active</option>
                       <option value="completed">Completed</option>
                       <option value="cancelled">Cancelled</option>

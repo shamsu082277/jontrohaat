@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { EquipmentCard } from "@/components/shared/equipment-card";
 import {
   CATEGORIES,
-  SAMPLE_EQUIPMENTS,
   CUSTOMER_REVIEWS,
   BANGLADESH_DISTRICTS,
 } from "@/lib/fixtures";
+import { Equipment } from "@/types";
+import { equipmentService } from "@/lib/api-services";
+import { toast } from "sonner";
 import {
   Search,
   MapPin,
@@ -34,6 +36,22 @@ export default function HomePage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("All Districts");
+  const [featuredEquipment, setFeaturedEquipment] = useState<Equipment[]>([]);
+  const [recentEquipment, setRecentEquipment] = useState<Equipment[]>([]);
+  const [equipmentCount, setEquipmentCount] = useState(0);
+
+  useEffect(() => {
+    Promise.all([
+      equipmentService.getFeatured(),
+      equipmentService.getAll({ limit: 4, sortBy: "newest" }),
+    ]).then(([featured, recent]) => {
+      setFeaturedEquipment(featured.data || []);
+      setRecentEquipment(recent.data?.items || []);
+      setEquipmentCount(recent.data?.pagination.total || 0);
+    }).catch((error) => {
+      toast.error(error instanceof Error ? error.message : "Homepage equipment could not be loaded");
+    });
+  }, []);
 
   const handleHeroSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +60,6 @@ export default function HomePage() {
     if (selectedDistrict !== "All Districts") params.set("district", selectedDistrict);
     router.push(`/equipment?${params.toString()}`);
   };
-
-  const featuredEquipment = SAMPLE_EQUIPMENTS.filter((eq) => eq.isFeatured).slice(0, 6);
-  const recentEquipment = [...SAMPLE_EQUIPMENTS]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 4);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -294,7 +307,7 @@ export default function HomePage() {
 
             <Button asChild variant="brand" size="sm" className="gap-1.5 font-bold self-start sm:self-auto">
               <Link href="/equipment">
-                <span>সম্পূর্ণ তালিকা দেখুন ({SAMPLE_EQUIPMENTS.length})</span>
+                <span>সম্পূর্ণ তালিকা দেখুন ({equipmentCount})</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
