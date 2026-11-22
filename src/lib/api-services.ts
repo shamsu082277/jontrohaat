@@ -4,7 +4,6 @@ import {
   Booking,
   EquipmentFilterParams,
   PaginatedResponse,
-  ApiResponse,
   User,
   UserRole,
 } from "@/types";
@@ -32,11 +31,14 @@ export const equipmentService = {
   getById: (id: string) =>
     apiClient<Equipment>(`/api/equipment/${id}`, { requiresAuth: false }),
 
-  create: (data: Partial<Equipment> & { image?: string; rentalPrice?: number; availableQuantity?: number; rentalTerms?: string }) =>
+  create: (data: Partial<Equipment> & { images?: string[]; rentalPrice?: number; availableQuantity?: number; rentalTerms?: string }) =>
     apiClient<Equipment>("/api/equipment", { method: "POST", body: data }),
 
   update: (id: string, data: Partial<Equipment>) =>
     apiClient<Equipment>(`/api/equipment/${id}`, { method: "PATCH", body: data }),
+
+  getByIdForOwner: (id: string) =>
+    apiClient<Equipment>(`/api/equipment/${id}`),
 
   delete: (id: string) =>
     apiClient<{ deleted: boolean }>(`/api/equipment/${id}`, { method: "DELETE" }),
@@ -123,15 +125,4 @@ export const adminService = {
     apiClient<Equipment>(`/api/admin/equipment/${id}/status`, { method: "PATCH", body: { status } }),
   deleteEquipment: (id: string) =>
     apiClient<{ deleted: boolean }>(`/api/admin/equipment/${id}`, { method: "DELETE", body: { confirm: true } }),
-};
-
-export const imageUploadService = {
-  upload: async (file: File): Promise<ApiResponse<{ url: string; display_url: string }>> => {
-    const formData = new FormData();
-    formData.append("image", file);
-    return apiClient<{ url: string; display_url: string }>("/api/uploads/image", {
-      method: "POST",
-      body: formData,
-    });
-  },
 };

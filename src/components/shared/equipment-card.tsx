@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Equipment } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatBDT } from "@/lib/utils";
 import { useFavorites } from "@/components/shared/favorites-context";
+import { SafeImage } from "@/components/shared/safe-image";
 import { MapPin, Heart, ArrowRight, ShieldCheck, Star } from "lucide-react";
-import { useState } from "react";
 
 interface EquipmentCardProps {
   equipment: Equipment;
@@ -18,27 +17,17 @@ interface EquipmentCardProps {
 export function EquipmentCard({ equipment, priority = false }: EquipmentCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(equipment._id);
-  const [imgSrc, setImgSrc] = useState(
-    equipment.images?.[0] ||
-      "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80"
-  );
-
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-brand-leaf/40 hover:shadow-lg">
       {/* Image Container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-        <Image
-          src={imgSrc}
+        <SafeImage
+          src={equipment.images?.[0]}
           alt={equipment.title}
           fill
           priority={priority}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={() =>
-            setImgSrc(
-              "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80"
-            )
-          }
         />
 
         {/* Gradient Overlay for badges */}

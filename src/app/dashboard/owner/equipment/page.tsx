@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import Link from "next/link";
 import { Equipment } from "@/types";
 import { equipmentService, ownerService } from "@/lib/api-services";
@@ -76,8 +76,8 @@ export default function OwnerEquipmentPage() {
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
                       <div className="relative h-12 w-16 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
-                        <Image
-                          src={eq.images?.[0] || "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=400&q=80"}
+                        <SafeImage
+                          src={eq.images?.[0]}
                           alt={eq.title}
                           fill
                           sizes="64px"
@@ -120,6 +120,9 @@ export default function OwnerEquipmentPage() {
                     <div className="flex items-center justify-end gap-1.5">
                       <Button asChild size="sm" variant="outline" className="h-8 text-xs">
                         <Link href={`/equipment/${eq._id}`}>ভিউ</Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+                        <Link href={`/dashboard/owner/equipment/${eq._id}/images`}>ছবি</Link>
                       </Button>
                       <Button
                         size="sm"

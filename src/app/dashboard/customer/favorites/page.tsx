@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { useFavorites } from "@/components/shared/favorites-context";
 import { favoritesService } from "@/lib/api-services";
 import { Equipment } from "@/types";
@@ -50,8 +50,8 @@ export default function CustomerFavoritesPage() {
             >
               <div>
                 <div className="relative aspect-[16/10] w-full bg-muted overflow-hidden">
-                  <Image
-                    src={eq.images?.[0] || "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80"}
+                  <SafeImage
+                    src={eq.images?.[0]}
                     alt={eq.title}
                     fill
                     sizes="(max-width: 640px) 100vw, 300px"

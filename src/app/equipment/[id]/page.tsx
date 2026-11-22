@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Equipment } from "@/types";
@@ -185,9 +185,7 @@ export default function EquipmentDetailsPage() {
     );
   }
 
-  const galleryImages = equipment.images?.length > 0 ? equipment.images : [
-    "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1200&q=80"
-  ];
+  const galleryImages = equipment.images?.length > 0 ? equipment.images : [""];
 
   return (
     <div className="container-haat py-8 lg:py-12 space-y-8">
@@ -232,7 +230,7 @@ export default function EquipmentDetailsPage() {
           {/* Main Large Image */}
           <div className="space-y-3">
             <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-border bg-muted shadow-sm">
-              <Image
+              <SafeImage
                 src={galleryImages[activeImageIndex]}
                 alt={equipment.title}
                 fill
@@ -269,7 +267,7 @@ export default function EquipmentDetailsPage() {
                         : "border-border opacity-70 hover:opacity-100"
                     }`}
                   >
-                    <Image
+                    <SafeImage
                       src={img}
                       alt={`Thumbnail ${idx + 1}`}
                       fill
@@ -458,11 +456,8 @@ export default function EquipmentDetailsPage() {
 
             <div className="flex items-center gap-4">
               <div className="relative h-14 w-14 rounded-full overflow-hidden bg-muted border border-border shrink-0">
-                <Image
-                  src={
-                    equipment.owner?.avatar ||
-                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80"
-                  }
+                <SafeImage
+                  src={equipment.owner?.avatar}
                   alt={equipment.ownerName}
                   fill
                   sizes="56px"

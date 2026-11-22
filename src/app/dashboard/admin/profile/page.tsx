@@ -1,24 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Shield, Mail, Phone, Lock, CheckCircle2 } from "lucide-react";
+import { ImageUrlList } from "@/components/shared/image-url-list";
+import { profileService } from "@/lib/api-services";
+import { Shield, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminProfilePage() {
-  const [name, setName] = useState("JontroHaat Super Administrator");
-  const [email] = useState("admin@jontrohaat.com");
-  const [phone, setPhone] = useState("01800-000000");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [image, setImage] = useState("");
+  const [imageValid, setImageValid] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleUpdate = (e: React.FormEvent) => {
+  useEffect(() => {
+    profileService.getMe()
+      .then(({ data }) => {
+        setName(data.name || "");
+        setEmail(data.email || "");
+        setPhone(data.phone || "");
+        setImage(data.image || "");
+        setImageValid(!data.image);
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Profile could not be loaded"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      await profileService.updateMe({ name, phone, image });
       toast.success("এডমিন প্রোফাইল সফলভাবে আপডেট হয়েছে!");
-    }, 600);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Profile could not be updated");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -30,7 +52,7 @@ export default function AdminProfilePage() {
         </p>
       </div>
 
-      <form onSubmit={handleUpdate} className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5 text-xs">
+      {loading ? <div className="p-8 text-center text-xs text-muted-foreground">লোড হচ্ছে...</div> : <form onSubmit={handleUpdate} className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5 text-xs">
         <div className="rounded-xl border border-brand-leaf/30 bg-brand-forest/10 p-4 flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-brand-forest text-brand-harvest flex items-center justify-center">
             <Shield className="h-5 w-5" />
@@ -40,6 +62,16 @@ export default function AdminProfilePage() {
             <div className="text-[11px] text-muted-foreground">Full Platform Permissions Enabled</div>
           </div>
         </div>
+
+        <ImageUrlList
+          value={image ? [image] : []}
+          onChange={(urls) => setImage(urls[0] || "")}
+          onValidityChange={setImageValid}
+          label="Admin profile image URL"
+          helperText="Host your profile image externally and paste its HTTPS image URL."
+          maxItems={1}
+          allowEmpty
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -64,11 +96,11 @@ export default function AdminProfilePage() {
         </div>
 
         <div className="pt-2 flex justify-end">
-          <Button type="submit" variant="brand" disabled={saving} className="font-bold text-xs h-10 px-6">
+          <Button type="submit" variant="brand" disabled={saving || !imageValid} className="font-bold text-xs h-10 px-6">
             {saving ? "আপডেট হচ্ছে..." : "সংরক্ষণ করুন (Save Admin Profile)"}
           </Button>
         </div>
-      </form>
+      </form>}
     </div>
   );
 }

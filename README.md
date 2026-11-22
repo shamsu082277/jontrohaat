@@ -1,109 +1,202 @@
-# JontroHaat (যন্ত্রহাট)
+# JontroHaat --- Frontend
 
-> **যন্ত্র ভাড়া নিন, কাজ এগিয়ে নিন।**  
-> Bangladesh-focused Agricultural Equipment Rental Marketplace.
+JontroHaat is a Bangladesh-focused agricultural equipment rental
+marketplace. This repository contains the Next.js frontend for browsing
+equipment and accessing customer, equipment-owner, and admin
+experiences.
 
----
+## Live links
 
-## 🌾 Project Overview
+-   **Live application:** https://jontrohaat.vercel.app
+-   **Frontend repository:** https://github.com/shamsu082277/jontrohaat
+-   **Backend repository:**
+    https://github.com/shamsu082277/jontrohaat-server
+-   **Backend service:** https://jontrohaat-server.onrender.com
 
-**JontroHaat (যন্ত্রহাট)** is a dedicated agritech rental marketplace designed specifically for Bangladeshi farmers, agricultural contractors, and equipment owners. The platform bridges the gap between agricultural machinery owners (power tillers, combine harvesters, irrigation pumps, seeders, threshers) and farmers seeking cost-effective, timely access to vital tools for crop cycles.
+## Technology
 
----
+-   Next.js 16.4.6 (App Router)
+-   React 19
+-   TypeScript
+-   Tailwind CSS 4
+-   Better Auth
+-   Zod and React Hook Form
+-   Radix UI primitives, Lucide icons, Sonner, Framer Motion and
+    Recharts
 
-## 🎨 Brand Identity & Design System
+## Features
 
-- **Forest Green** (`#174C32`): Primary brand color representing lush fields and agricultural stability.
-- **Leaf Green** (`#39834F`): Secondary accent representing growth, vitality, and active states.
-- **Fresh Green** (`#B4D68A`): Soft highlight for tags, badges, and dark-mode contrast.
-- **Harvest Yellow** (`#E7B54A`): Accent for calls-to-action, ratings, and seasonal highlights.
-- **Warm Cream** (`#F4F5E9`): Background surfaces, cards, and warm daylight balance.
+-   Agricultural equipment discovery and browsing
+-   Equipment details and rental information
+-   Customer, equipment-owner and admin dashboards
+-   Better Auth authentication
+-   Google OAuth when configured
+-   Rental and payment workflows, including Stripe integration
+-   Responsive layouts and light/dark theme support
 
-### Typography
-- **English**: [Manrope](https://fonts.google.com/specimen/Manrope) — clean, modern, legible UI sans-serif.
-- **Bengali**: [Hind Siliguri](https://fonts.google.com/specimen/Hind+Siliguri) — elegant, native Bengali script legibility.
+Some features depend on the backend and correctly configured third-party
+services.
 
----
+## Getting started
 
-## 🛠️ Technology Stack
+### Requirements
 
-- **Framework**: Next.js 16 (App Router) with React 19 & TypeScript
-- **Styling**: Tailwind CSS v4 & custom CSS variable tokens
-- **UI Components**: shadcn/ui architectural design & Lucide React icons
-- **Animations**: Framer Motion
-- **Form Management**: React Hook Form with Zod validation
-- **Authentication**: Better Auth with MongoDB Adapter and JWT plugin
-- **Theme**: Light & Dark mode support via `next-themes`
-- **Charts**: Recharts
-- **Notifications**: Sonner
+-   Node.js compatible with the installed Next.js release
+-   npm
+-   Required authentication and database configuration
 
----
+### 1. Clone the repository
 
-## 📁 Project Architecture
-
-```
-src/
-├── app/                  # Next.js App Router (pages, layouts, route handlers)
-│   ├── favicon.ico
-│   ├── globals.css       # Tailwind v4 theme, brand CSS variables & utilities
-│   ├── layout.tsx        # Root layout with fonts, theme provider, and toaster
-│   └── page.tsx          # Main entry view
-├── components/
-│   ├── layout/           # Shared layout components (Navbar, Footer, Sidebar)
-│   ├── shared/           # Reusable functional widgets (ThemeToggle, Providers)
-│   └── ui/               # Primitive UI design elements (Button, Card, Input)
-├── features/             # Feature-oriented domain modules (equipment, bookings)
-├── hooks/                # Custom React hooks
-├── lib/                  # Utilities, fonts, auth client, api helpers
-│   ├── fonts.ts          # Manrope and Hind Siliguri font configurations
-│   └── utils.ts          # Class merging, BDT currency, and date formatters
-└── types/                # Domain TypeScript models and interfaces
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 20+
-- npm or pnpm
-- MongoDB Atlas cluster
-
-### 1. Installation
-```bash
-git clone <repository-url>
+``` bash
+git clone https://github.com/shamsu082277/jontrohaat.git
 cd jontrohaat
+```
+
+### 2. Install dependencies
+
+``` bash
 npm install
 ```
 
-### 2. Environment Setup
-Copy the example environment file and fill in your keys:
-```bash
-cp .env.example .env.local
+### 3. Configure environment variables
+
+Create `.env.local` in the project root. Use the exact variable names
+referenced by the application and any supplied `.env.example`.
+
+Example:
+
+``` env
+BETTER_AUTH_SECRET=replace_with_a_long_random_secret
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:5000
+
+GOOGLE_CLIENT_ID=replace_with_google_client_id
+GOOGLE_CLIENT_SECRET=replace_with_google_client_secret
 ```
 
-### 3. Run Development Server
-```bash
+For production, set the application URLs to the deployed HTTPS domains
+and set the API URL to the deployed backend. Confirm the API variable
+name against the frontend source code before configuring it.
+
+If the Better Auth server configuration connects directly to MongoDB,
+configure the required MongoDB variables in the frontend environment as
+well. Never expose database credentials, OAuth secrets, or private keys
+through `NEXT_PUBLIC_` variables.
+
+Do not commit `.env`, `.env.local`, or files containing real
+credentials.
+
+### 4. Run locally
+
+``` bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open http://localhost:3000.
 
-### 4. Build for Production
-```bash
+### 5. Build and run for production
+
+``` bash
 npm run build
 npm run start
 ```
 
-### Express API integration
+The current production build script is `next build`. Keep the build
+configuration compatible with this project's Tailwind CSS integration.
 
-The Next.js client uses the centralized API client and Better Auth JWT plugin. Copy the frontend `.env.example` to `.env.local`; set `NEXT_PUBLIC_API_URL` to the Express API origin. For local development, run the client on port `3000` and the API from the sibling `jontrohaat-server` directory on port `5000`.
+## Deployment on Vercel
 
-The Express service has its own `.env.example`, setup instructions, and endpoint list in [`../jontrohaat-server/README.md`](../jontrohaat-server/README.md). Configure MongoDB, Stripe test keys, ImgBB, JWKS and CORS on the server only. Do not define MongoDB, Stripe secret/webhook, or ImgBB credentials under `NEXT_PUBLIC_*`.
+1.  Import this repository into Vercel.
 
-For production, set `NEXT_PUBLIC_APP_URL` to the actual Vercel frontend URL and `NEXT_PUBLIC_API_URL` to the Vercel backend origin (for example, `https://<backend-project>.vercel.app`, without a trailing `/api`). Set Better Auth's `BETTER_AUTH_URL` and Google OAuth callback to the production frontend origin. On the backend, allow the exact frontend origin in `CLIENT_URL`. The application has not been deployed; hosted URLs and end-to-end live integrations are not available yet.
+2.  Set the project root directory to the repository root.
 
----
+3.  Use `npm install` as the install command and `npm run build` as the
+    build command.
 
-## 📜 License
-This project is developed for academic and educational evaluation.
+4.  Add required production environment variables in **Project →
+    Settings → Environment Variables**.
+
+5.  Set the production application URL and backend API URL to the
+    correct HTTPS domains.
+
+6.  Register the Google OAuth callback URL in Google Cloud Console.
+    Confirm the callback path against the Better Auth configuration; the
+    expected URL for this project is:
+
+    `https://jontrohaat.vercel.app/api/auth/callback/google`
+
+7.  Deploy or redeploy after changing environment variables.
+
+## Backend connection
+
+-   **Backend base URL:** https://jontrohaat-server.onrender.com
+-   **Health endpoint:**
+    https://jontrohaat-server.onrender.com/api/health
+
+The backend CORS configuration must allow this frontend origin:
+
+`https://jontrohaat.vercel.app`
+
+The frontend API base URL must match the environment variable actually
+read by the frontend code.
+
+## Useful scripts
+
+  Command           Purpose
+  ----------------- ------------------------------------
+  `npm run dev`     Start the local development server
+  `npm run build`   Create the production build
+  `npm run start`   Start the production server
+  `npm run lint`    Run ESLint
+
+## Repository structure
+
+The project uses the Next.js App Router. Common areas include:
+
+-   `src/app` --- routes, layouts and pages
+-   `src/components` --- reusable UI components
+-   `src/lib` --- shared utilities and integrations
+-   `public` --- static assets
+
+Exact paths may vary as the project evolves.
+
+## Troubleshooting
+
+### The deployed page looks unstyled
+
+-   Confirm the latest commit is deployed.
+-   Check that emitted production CSS contains Tailwind utility rules.
+-   Confirm the global stylesheet is imported by the root layout.
+-   Check the Tailwind CSS 4 and Turbopack integration configuration.
+-   Hard-refresh the browser or test in a private window.
+
+### Equipment or API data does not load
+
+-   Open the backend health endpoint and confirm it reports
+    `database: connected`.
+-   Confirm the frontend API base URL points to the Render service.
+-   Check Render logs and browser Network requests.
+-   Confirm CORS allows the Vercel origin.
+
+### Authentication or Google login fails
+
+-   Check the Better Auth production URL and secret.
+-   Confirm Google OAuth credentials are configured as server-side
+    secrets.
+-   Confirm the authorized redirect URI matches the Better Auth callback
+    URL.
+-   Confirm the backend JWKS URL, JWT issuer and audience match the
+    frontend's actual Better Auth JWT configuration.
+
+## Security
+
+-   Never commit real environment files or secrets.
+-   Never use `NEXT_PUBLIC_` for private credentials.
+-   Use HTTPS for production URLs.
+-   Restrict database credentials and permissions.
+-   Rotate any secret that has been exposed.
+
+## Related repository
+
+Backend source code: https://github.com/shamsu082277/jontrohaat-server

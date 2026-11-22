@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ImageUpload } from "@/components/image-upload/image-upload";
+import { ImageUrlList } from "@/components/shared/image-url-list";
 import { CATEGORIES, BANGLADESH_DISTRICTS, BANGLADESH_DIVISIONS } from "@/lib/fixtures";
 import { EquipmentCategory } from "@/types";
 import { AlertCircle, ArrowLeft } from "lucide-react";
@@ -29,12 +29,18 @@ export default function AddEquipmentPage() {
   const [division, setDivision] = useState("Rajshahi");
   const [district, setDistrict] = useState("Bogura");
   const [address, setAddress] = useState("");
-  const [image, setImage] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [imagesValid, setImagesValid] = useState(false);
   const [terms, setTerms] = useState("জ্বালানি খরচ (ডিজেল) ভাড়াগ্রহীতার। জাতীয় পরিচয়পত্র (NID) কপি আবশ্যক।");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!imagesValid) {
+      toast.error("Add at least one valid image URL and wait for its preview to load.");
+      return;
+    }
 
     if (!title.trim() || !description.trim() || !pricePerDay || !quantity || !address.trim()) {
       toast.error("অনুগ্রহ করে সকল আবশ্যক তথ্য পূরণ করুন");
@@ -54,7 +60,7 @@ export default function AddEquipmentPage() {
         condition,
         brand: brand.trim() || undefined,
         model: model.trim() || undefined,
-        image,
+        images,
         rentalTerms: terms.trim(),
       });
       if (!response.success) throw new Error(response.message || "Equipment could not be submitted");
@@ -220,9 +226,9 @@ export default function AddEquipmentPage() {
           </div>
         </div>
 
-        {/* Location & Image */}
+        {/* Location & Images */}
         <div className="space-y-4 border-b border-border pb-6">
-          <h2 className="text-sm font-bold text-foreground">অবস্থান ও ছবি (Location & Image)</h2>
+          <h2 className="text-sm font-bold text-foreground">অবস্থান ও ছবি (Location & Images)</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -266,11 +272,12 @@ export default function AddEquipmentPage() {
             />
           </div>
 
-          <ImageUpload
-            value={image}
-            onChange={(url) => setImage(url)}
-            label="যন্ত্রপাতির ছবি আপলোড করুন *"
-            helperText="সরাসরি আপনার মেশিনের আসল ছবি দিলে কৃষক দ্রুত বুকিং করবে"
+          <ImageUrlList
+            value={images}
+            onChange={setImages}
+            onValidityChange={setImagesValid}
+            label="Equipment image URLs *"
+            helperText="Paste HTTPS image URLs. Each preview is checked before the listing can be submitted."
           />
         </div>
 

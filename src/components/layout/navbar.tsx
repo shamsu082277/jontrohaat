@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -145,7 +145,7 @@ export function Navbar() {
               >
                 <div className="h-6 w-6 rounded-full bg-brand-forest text-brand-cream overflow-hidden flex items-center justify-center text-[11px] font-bold">
                   {currentUser.image ? (
-                    <Image
+                    <SafeImage
                       src={currentUser.image}
                       alt={currentUser.name || "User"}
                       width={24}
@@ -304,7 +304,7 @@ export function Navbar() {
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-brand-forest text-brand-cream overflow-hidden flex items-center justify-center text-xs font-bold shrink-0">
                   {currentUser.image ? (
-                    <Image
+                    <SafeImage
                       src={currentUser.image}
                       alt={currentUser.name || "User"}
                       width={36}

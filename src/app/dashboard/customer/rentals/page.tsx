@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import Link from "next/link";
 import { Booking } from "@/types";
 import { bookingService, paymentService } from "@/lib/api-services";
@@ -129,8 +129,8 @@ export default function CustomerRentalsPage() {
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         <div className="relative h-12 w-14 rounded-lg overflow-hidden bg-muted shrink-0 border border-border">
-                          <Image
-                            src={rental.equipmentImage || "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=400&q=80"}
+                          <SafeImage
+                            src={rental.equipmentImage}
                             alt={rental.equipmentTitle}
                             fill
                             sizes="56px"

@@ -18,7 +18,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Two-wheel machines for soil tilling and field preparation.",
     banglaDescription: "জমি চাষ ও প্রস্তুতির জন্য দুই চাকার যন্ত্র।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1532929900024-6413d2ed39c8?q=80&w=1197&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Tractors",
@@ -27,7 +27,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Agricultural tractors for field work and transport.",
     banglaDescription: "জমি চাষ ও কৃষিপণ্য পরিবহনের ট্রাক্টর।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1783917131968-db105832cdf8?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Harvesters",
@@ -36,7 +36,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Machines that combine crop cutting and grain separation.",
     banglaDescription: "ফসল কাটা ও শস্য আলাদা করার কম্বাইন যন্ত্র।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1633554587766-ffc8151e31c0?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Rice Transplanters",
@@ -45,7 +45,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Mechanical equipment for transplanting rice seedlings.",
     banglaDescription: "ধানের চারা রোপণের যান্ত্রিক সরঞ্জাম।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?q=80&w=1091&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Irrigation Pumps",
@@ -54,7 +54,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Water pumps used for agricultural irrigation.",
     banglaDescription: "কৃষিজমিতে সেচের জন্য পানির পাম্প।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1541024626294-9eb360170dd9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Sprayers",
@@ -63,7 +63,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Crop sprayers for applying agricultural treatments.",
     banglaDescription: "ফসলে কৃষি উপকরণ প্রয়োগের স্প্রেয়ার।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1711900177029-93798ef45bb7?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Threshers",
@@ -72,7 +72,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Mechanized equipment for separating grain from harvested crops.",
     banglaDescription: "কাটা ফসল থেকে শস্য আলাদা করার যন্ত্র।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1649007251633-85114e7f2b7b?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Reapers",
@@ -81,7 +81,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Harvesting machines for cutting standing crops.",
     banglaDescription: "দাঁড়ানো ফসল কাটার যন্ত্র।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1527847263472-aa5338d178b8?q=80&w=1174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Seed Drills",
@@ -90,7 +90,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Equipment for placing seed or granular inputs in rows.",
     banglaDescription: "সারিতে বীজ বা দানাদার উপকরণ বসানোর যন্ত্র।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1684677806819-a3c5d7ebc752?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
   {
     id: "Rotavators",
@@ -99,7 +99,7 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Rotary tillage attachments for preparing soil.",
     banglaDescription: "মাটি প্রস্তুত করার ঘূর্ণায়মান চাষের যন্ত্র।",
     count: 2,
-    image: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1606739211185-2c846d734a6d?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   },
 ];
 

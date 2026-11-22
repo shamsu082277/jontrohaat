@@ -5,7 +5,7 @@ import { useSession } from "@/lib/auth-client";
 import { profileService } from "@/lib/api-services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ImageUpload } from "@/components/image-upload/image-upload";
+import { ImageUrlList } from "@/components/shared/image-url-list";
 import { User, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ export default function CustomerProfilePage() {
   const [division, setDivision] = useState("");
   const [address, setAddress] = useState("");
   const [avatar, setAvatar] = useState(currentUser?.image || "");
+  const [imageValid, setImageValid] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +36,7 @@ export default function CustomerProfilePage() {
         setDivision(profile.division || "");
         setAddress("address" in profile && typeof profile.address === "string" ? profile.address : "");
         setAvatar(profile.image || "");
+        setImageValid(!profile.image);
       })
       .catch((error) => toast.error(error instanceof Error ? error.message : "Profile could not be loaded"))
       .finally(() => setLoading(false));
@@ -63,14 +65,17 @@ export default function CustomerProfilePage() {
       </div>
 
       {loading ? <div className="p-8 text-center text-xs text-muted-foreground">লোড হচ্ছে...</div> : <form onSubmit={handleUpdate} className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5 text-xs">
-        {/* Profile Picture Upload */}
+        {/* External Profile Image URL */}
         <div className="space-y-2 border-b border-border pb-5">
           <label className="font-semibold text-foreground">Profile Picture (প্রোফাইল ছবি)</label>
-          <ImageUpload
-            value={avatar}
-            onChange={(url) => setAvatar(url)}
+          <ImageUrlList
+            value={avatar ? [avatar] : []}
+            onChange={(urls) => setAvatar(urls[0] || "")}
+            onValidityChange={setImageValid}
             label=""
-            helperText="JPG or PNG up to 2MB"
+            helperText="Host your profile image externally and paste its HTTPS image URL."
+            maxItems={1}
+            allowEmpty
           />
         </div>
 
@@ -125,7 +130,7 @@ export default function CustomerProfilePage() {
         </div>
 
         <div className="pt-2 flex justify-end">
-          <Button type="submit" variant="brand" disabled={saving} className="font-bold text-xs h-10 px-6">
+          <Button type="submit" variant="brand" disabled={saving || !imageValid} className="font-bold text-xs h-10 px-6">
             {saving ? "আপডেট হচ্ছে..." : "প্রোফাইল সংরক্ষণ করুন (Save Profile)"}
           </Button>
         </div>

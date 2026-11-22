@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -169,7 +169,7 @@ export default function HomePage() {
               className="lg:col-span-5 relative"
             >
               <div className="relative mx-auto aspect-[4/3] sm:aspect-[16/11] lg:aspect-square w-full max-w-lg overflow-hidden rounded-3xl border-4 border-card shadow-2xl">
-                <Image
+                <SafeImage
                   src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80"
                   alt="Bangladeshi agricultural harvest with combine harvester and golden paddy field"
                   fill
@@ -252,7 +252,7 @@ export default function HomePage() {
                   className="group flex flex-col h-full overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-brand-leaf/50 hover:shadow-md"
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-                    <Image
+                    <SafeImage
                       src={cat.image}
                       alt={cat.name}
                       fill
@@ -260,9 +260,9 @@ export default function HomePage() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    <span className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs">
+                    {/* <span className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs">
                       {cat.count}+ টি যন্ত্র
-                    </span>
+                    </span> */}
                   </div>
 
                   <div className="p-3.5 flex flex-col justify-between flex-1">
@@ -539,7 +539,7 @@ export default function HomePage() {
 
                 <div className="mt-5 pt-4 border-t border-border/70 flex items-center gap-3">
                   <div className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden bg-muted border border-border">
-                    <Image
+                    <SafeImage
                       src={review.renterAvatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80"}
                       alt={review.renterName}
                       fill
