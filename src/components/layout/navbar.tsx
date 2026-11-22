@@ -2,9 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { useSession, signOut } from "@/lib/auth-client";
+import { toast } from "sonner";
 import {
   Tractor,
   Search,
@@ -16,6 +19,7 @@ import {
   Shield,
   Briefcase,
   ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { useFavorites } from "@/components/shared/favorites-context";
 
@@ -24,8 +28,18 @@ export function Navbar() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [quickSearch, setQuickSearch] = React.useState("");
-  const [dashboardDropdownOpen, setDashboardDropdownOpen] = React.useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = React.useState(false);
   const { favorites } = useFavorites();
+  const { data: session } = useSession();
+
+  const currentUser = session?.user;
+  const userRole = (currentUser as unknown as { role?: string })?.role || "customer";
+
+  const getDashboardHref = (role: string) => {
+    if (role === "admin") return "/dashboard/admin";
+    if (role === "owner") return "/dashboard/owner";
+    return "/dashboard/customer/rentals";
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +47,19 @@ export function Navbar() {
       router.push(`/equipment?search=${encodeURIComponent(quickSearch.trim())}`);
       setQuickSearch("");
       setMobileMenuOpen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("সফলভাবে লগআউট হয়েছেন");
+      setUserDropdownOpen(false);
+      setMobileMenuOpen(false);
+      router.push("/");
+      router.refresh();
+    } catch {
+      toast.error("লগআউটে সমস্যা হয়েছে");
     }
   };
 
@@ -114,78 +141,115 @@ export function Navbar() {
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          {/* Dashboard Dropdown Placeholder */}
-          <div className="relative">
-            <button
-              onClick={() => setDashboardDropdownOpen(!dashboardDropdownOpen)}
-              className="flex items-center gap-1.5 h-9 rounded-lg border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-            >
-              <LayoutDashboard className="h-3.5 w-3.5 text-brand-leaf" />
-              <span>Dashboards</span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </button>
-
-            {dashboardDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setDashboardDropdownOpen(false)}
-                />
-                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-card p-2 shadow-lg z-50">
-                  <div className="px-2 py-1.5 text-[11px] font-medium text-muted-foreground">
-                    Role Views (Preview)
-                  </div>
-                  <Link
-                    href="/dashboard/customer"
-                    onClick={() => setDashboardDropdownOpen(false)}
-                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                  >
-                    <User className="h-4 w-4 text-brand-forest dark:text-brand-fresh" />
-                    <div>
-                      <div className="font-semibold">Customer Dashboard</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        Bookings & Favorites
-                      </div>
-                    </div>
-                  </Link>
-                  <Link
-                    href="/dashboard/owner"
-                    onClick={() => setDashboardDropdownOpen(false)}
-                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                  >
-                    <Briefcase className="h-4 w-4 text-brand-leaf" />
-                    <div>
-                      <div className="font-semibold">Owner Dashboard</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        Manage Listings & Earnings
-                      </div>
-                    </div>
-                  </Link>
-                  <Link
-                    href="/dashboard/admin"
-                    onClick={() => setDashboardDropdownOpen(false)}
-                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                  >
-                    <Shield className="h-4 w-4 text-brand-harvest" />
-                    <div>
-                      <div className="font-semibold">Admin Dashboard</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        Approvals & Platform Analytics
-                      </div>
-                    </div>
-                  </Link>
+          {/* Authenticated User Menu vs Guest Login/Register */}
+          {currentUser ? (
+            <div className="relative">
+              <button
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-2 h-9 rounded-full border border-border pl-1.5 pr-3 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <div className="h-6 w-6 rounded-full bg-brand-forest text-brand-cream overflow-hidden flex items-center justify-center text-[11px] font-bold">
+                  {currentUser.image ? (
+                    <Image
+                      src={currentUser.image}
+                      alt={currentUser.name || "User"}
+                      width={24}
+                      height={24}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    currentUser.name?.[0]?.toUpperCase() || "U"
+                  )}
                 </div>
-              </>
-            )}
-          </div>
+                <span className="max-w-[100px] truncate">{currentUser.name || "User"}</span>
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              </button>
 
-          {/* Auth Links */}
-          <Button asChild variant="ghost" size="sm" className="text-xs font-medium">
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild variant="brand" size="sm" className="text-xs font-semibold">
-            <Link href="/register">Register</Link>
-          </Button>
+              {userDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setUserDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-card p-2 shadow-lg z-50">
+                    <div className="px-3 py-2 border-b border-border/70 mb-1">
+                      <div className="font-bold text-xs text-foreground truncate">
+                        {currentUser.name}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground truncate">
+                        {currentUser.email}
+                      </div>
+                      <span className="mt-1 inline-block rounded bg-brand-forest/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-brand-forest dark:text-brand-fresh">
+                        {userRole}
+                      </span>
+                    </div>
+
+                    <Link
+                      href={getDashboardHref(userRole)}
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      {userRole === "admin" ? (
+                        <Shield className="h-4 w-4 text-brand-harvest" />
+                      ) : userRole === "owner" ? (
+                        <Briefcase className="h-4 w-4 text-brand-leaf" />
+                      ) : (
+                        <LayoutDashboard className="h-4 w-4 text-brand-forest dark:text-brand-fresh" />
+                      )}
+                      <div>
+                        <div className="font-semibold">
+                          {userRole === "admin"
+                            ? "Admin Dashboard"
+                            : userRole === "owner"
+                            ? "Owner Dashboard"
+                            : "Customer Dashboard"}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {userRole === "admin"
+                            ? "Manage approvals & platform"
+                            : userRole === "owner"
+                            ? "Manage listings & orders"
+                            : "View bookings & favorites"}
+                        </div>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href={
+                        userRole === "admin"
+                          ? "/dashboard/admin/profile"
+                          : userRole === "owner"
+                          ? "/dashboard/owner/profile"
+                          : "/dashboard/customer/profile"
+                      }
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span>Profile & Settings</span>
+                    </Link>
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors cursor-pointer text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>লগআউট (Logout)</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="text-xs font-medium">
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild variant="brand" size="sm" className="text-xs font-semibold">
+                <Link href="/register">Register</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -239,50 +303,67 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Dashboards Section in Mobile */}
-          <div className="py-3 border-b border-border space-y-1">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Dashboards Placeholder
-            </div>
-            <Link
-              href="/dashboard/customer"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 py-1.5 text-xs text-foreground"
-            >
-              <User className="h-3.5 w-3.5 text-brand-forest" />
-              Customer Dashboard
-            </Link>
-            <Link
-              href="/dashboard/owner"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 py-1.5 text-xs text-foreground"
-            >
-              <Briefcase className="h-3.5 w-3.5 text-brand-leaf" />
-              Owner Dashboard
-            </Link>
-            <Link
-              href="/dashboard/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 py-1.5 text-xs text-foreground"
-            >
-              <Shield className="h-3.5 w-3.5 text-brand-harvest" />
-              Admin Dashboard
-            </Link>
-          </div>
+          {/* Authenticated Dashboard Links or Guest Auth */}
+          {currentUser ? (
+            <div className="py-4 border-b border-border space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-brand-forest text-brand-cream overflow-hidden flex items-center justify-center text-xs font-bold shrink-0">
+                  {currentUser.image ? (
+                    <Image
+                      src={currentUser.image}
+                      alt={currentUser.name || "User"}
+                      width={36}
+                      height={36}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    currentUser.name?.[0]?.toUpperCase() || "U"
+                  )}
+                </div>
+                <div className="overflow-hidden">
+                  <div className="font-bold text-xs text-foreground truncate">
+                    {currentUser.name}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground truncate">
+                    {currentUser.email} ({userRole})
+                  </div>
+                </div>
+              </div>
 
-          {/* Mobile Auth Actions */}
-          <div className="pt-4 flex gap-2">
-            <Button asChild variant="outline" size="sm" className="flex-1">
-              <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                Login
-              </Link>
-            </Button>
-            <Button asChild variant="brand" size="sm" className="flex-1">
-              <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                Register
-              </Link>
-            </Button>
-          </div>
+              <div className="space-y-1 pt-1">
+                <Link
+                  href={getDashboardHref(userRole)}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 py-2 text-xs font-semibold text-foreground"
+                >
+                  <LayoutDashboard className="h-4 w-4 text-brand-leaf" />
+                  <span>
+                    Go to {userRole === "admin" ? "Admin" : userRole === "owner" ? "Owner" : "Customer"} Dashboard
+                  </span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 py-2 text-xs font-medium text-destructive text-left cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>লগআউট (Logout)</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-4 flex gap-2">
+              <Button asChild variant="outline" size="sm" className="flex-1">
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  Login
+                </Link>
+              </Button>
+              <Button asChild variant="brand" size="sm" className="flex-1">
+                <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+                  Register
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </header>
