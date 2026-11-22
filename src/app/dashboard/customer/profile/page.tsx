@@ -10,7 +10,7 @@ import { User, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CustomerProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, refetch: refreshSession } = useSession();
   const currentUser = session?.user;
 
   const [name, setName] = useState(currentUser?.name || "");
@@ -47,6 +47,7 @@ export default function CustomerProfilePage() {
     setSaving(true);
     try {
       await profileService.updateMe({ name, phone, district, division, address, image: avatar });
+      await refreshSession();
       toast.success("প্রোফাইল তথ্য সফলভাবে আপডেট হয়েছে!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Profile could not be updated");

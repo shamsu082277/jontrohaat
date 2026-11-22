@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ interface ImageUrlListProps {
 export function isSecureImageUrl(value: string) {
   try {
     const url = new URL(value.trim());
-    return url.protocol === "https:" && Boolean(url.hostname);
+    return url.protocol === "https:" && Boolean(url.hostname) && !url.username && !url.password;
   } catch {
     return false;
   }
@@ -37,8 +37,7 @@ export function ImageUrlList({
   const [newUrl, setNewUrl] = useState("");
   const [error, setError] = useState("");
   const [loadedUrls, setLoadedUrls] = useState<Set<string>>(() => new Set());
-  const valuesRef = useRef(value);
-  valuesRef.current = value;
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(() => new Set());
 
   const notifyValidity = (urls: string[], loaded: Set<string>) => {
     onValidityChange(
@@ -76,7 +75,10 @@ export function ImageUrlList({
     );
     const nextLoaded = new Set(loadedUrls);
     nextLoaded.delete(value[index]);
+    const nextFailed = new Set(failedUrls);
+    nextFailed.delete(value[index]);
     setLoadedUrls(nextLoaded);
+    setFailedUrls(nextFailed);
     onChange(next);
     notifyValidity(next, nextLoaded);
   };
@@ -85,7 +87,10 @@ export function ImageUrlList({
     const next = value.filter((_, currentIndex) => currentIndex !== index);
     const nextLoaded = new Set(loadedUrls);
     nextLoaded.delete(value[index]);
+    const nextFailed = new Set(failedUrls);
+    nextFailed.delete(value[index]);
     setLoadedUrls(nextLoaded);
+    setFailedUrls(nextFailed);
     setError("");
     onChange(next);
     notifyValidity(next, nextLoaded);
@@ -95,8 +100,12 @@ export function ImageUrlList({
     const nextLoaded = new Set(loadedUrls);
     if (loaded) nextLoaded.add(url);
     else nextLoaded.delete(url);
+    const nextFailed = new Set(failedUrls);
+    if (loaded) nextFailed.delete(url);
+    else nextFailed.add(url);
     setLoadedUrls(nextLoaded);
-    notifyValidity(valuesRef.current, nextLoaded);
+    setFailedUrls(nextFailed);
+    notifyValidity(value, nextLoaded);
   };
 
   return (
@@ -109,6 +118,7 @@ export function ImageUrlList({
       {value.map((url, index) => {
         const validUrl = isSecureImageUrl(url);
         const loaded = loadedUrls.has(url);
+        const failed = failedUrls.has(url);
         return (
           <div
             key={`${index}-${url}`}
@@ -142,6 +152,8 @@ export function ImageUrlList({
                 <p className="text-[11px] text-destructive">Use a valid HTTPS URL.</p>
               ) : loaded ? (
                 <p className="text-[11px] text-brand-leaf">Image preview loaded.</p>
+              ) : failed ? (
+                <p className="text-[11px] text-destructive">Image could not be reached. Try another URL.</p>
               ) : (
                 <p className="text-[11px] text-amber-600">Checking image URL…</p>
               )}

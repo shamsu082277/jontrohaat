@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUrlList } from "@/components/shared/image-url-list";
+import { useSession } from "@/lib/auth-client";
 import { profileService } from "@/lib/api-services";
 import { User, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 export default function OwnerProfilePage() {
+  const { refetch: refreshSession } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -23,6 +25,7 @@ export default function OwnerProfilePage() {
   useEffect(() => {
     profileService.getMe()
       .then(({ data }) => {
+        if (!data) throw new Error("Profile could not be loaded");
         setName(data.name || "");
         setEmail(data.email || "");
         setPhone(data.phone || "");
@@ -41,6 +44,7 @@ export default function OwnerProfilePage() {
     setSaving(true);
     try {
       await profileService.updateMe({ name, phone, district, division, address, image: avatar });
+      await refreshSession();
       toast.success("মালিক প্রোফাইল তথ্য সফলভাবে আপডেট হয়েছে!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Profile could not be updated");

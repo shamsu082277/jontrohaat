@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUrlList } from "@/components/shared/image-url-list";
+import { useSession } from "@/lib/auth-client";
 import { profileService } from "@/lib/api-services";
-import { Shield, Mail, Phone } from "lucide-react";
+import { Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminProfilePage() {
+  const { refetch: refreshSession } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -20,6 +22,7 @@ export default function AdminProfilePage() {
   useEffect(() => {
     profileService.getMe()
       .then(({ data }) => {
+        if (!data) throw new Error("Profile could not be loaded");
         setName(data.name || "");
         setEmail(data.email || "");
         setPhone(data.phone || "");
@@ -35,6 +38,7 @@ export default function AdminProfilePage() {
     setSaving(true);
     try {
       await profileService.updateMe({ name, phone, image });
+      await refreshSession();
       toast.success("এডমিন প্রোফাইল সফলভাবে আপডেট হয়েছে!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Profile could not be updated");

@@ -22,6 +22,7 @@ export default function EquipmentImagesPage() {
   useEffect(() => {
     equipmentService.getByIdForOwner(id)
       .then(({ data }) => {
+        if (!data) throw new Error("Equipment listing could not be loaded");
         setEquipment(data);
         setImages(data.images || []);
         if (!data.images?.length) setImagesValid(false);

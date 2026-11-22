@@ -147,6 +147,7 @@ export function Navbar() {
                   {currentUser.image ? (
                     <SafeImage
                       src={currentUser.image}
+                      fallbackSrc="/images/avatar-placeholder.svg"
                       alt={currentUser.name || "User"}
                       width={24}
                       height={24}
@@ -306,6 +307,7 @@ export function Navbar() {
                   {currentUser.image ? (
                     <SafeImage
                       src={currentUser.image}
+                      fallbackSrc="/images/avatar-placeholder.svg"
                       alt={currentUser.name || "User"}
                       width={36}
                       height={36}

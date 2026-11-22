@@ -458,6 +458,7 @@ export default function EquipmentDetailsPage() {
               <div className="relative h-14 w-14 rounded-full overflow-hidden bg-muted border border-border shrink-0">
                 <SafeImage
                   src={equipment.owner?.avatar}
+                  fallbackSrc="/images/avatar-placeholder.svg"
                   alt={equipment.ownerName}
                   fill
                   sizes="56px"
