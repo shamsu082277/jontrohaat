@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tractor, User, Mail, Lock, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUrlList } from "@/components/shared/image-url-list";
 
 function RegisterForm() {
   const router = useRouter();
@@ -18,6 +19,8 @@ function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileImage, setProfileImage] = useState<string[]>([]);
+  const [profileImageValid, setProfileImageValid] = useState(true);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +66,7 @@ function RegisterForm() {
         name,
         email,
         password,
+        image: profileImage[0] || undefined,
       });
 
       if (res.error) {
@@ -157,6 +161,16 @@ function RegisterForm() {
           />
         </div>
 
+        <ImageUrlList
+          value={profileImage}
+          onChange={setProfileImage}
+          onValidityChange={setProfileImageValid}
+          label="Profile Image URL (optional)"
+          helperText="Paste an HTTPS image URL hosted by an external service. No image files are uploaded."
+          maxItems={1}
+          allowEmpty
+        />
+
         <div className="space-y-1.5">
           <label className="font-semibold text-foreground flex items-center gap-1.5">
             <Lock className="h-3.5 w-3.5 text-brand-leaf" />
@@ -193,7 +207,7 @@ function RegisterForm() {
         <Button
           type="submit"
           variant="brand"
-          disabled={loading || googleLoading}
+          disabled={loading || googleLoading || !profileImageValid}
           className="w-full h-11 text-sm font-bold shadow-md hover:scale-[1.01] transition-transform"
         >
           {loading ? "অ্যাকাউন্ট তৈরি হচ্ছে..." : "নিবন্ধন সম্পন্ন করুন (Sign Up)"}

@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { jwt } from "better-auth/plugins";
 
@@ -17,6 +17,16 @@ async function createAuth() {
   if (process.env.NODE_ENV === "production" && (!secret || secret.length < 32)) {
     throw new Error("BETTER_AUTH_SECRET must be at least 32 characters in production");
   }
+  const isValidProfileImage = (image: unknown) => {
+    if (image === undefined || image === null || image === "") return true;
+    if (typeof image !== "string") return false;
+    try {
+      const url = new URL(image);
+      return url.protocol === "https:" && Boolean(url.hostname) && !url.username && !url.password;
+    } catch {
+      return false;
+    }
+  };
   return betterAuth({
     baseURL,
     secret: secret || "temporary-development-secret-at-least-32-chars",
@@ -56,6 +66,24 @@ async function createAuth() {
         division: {
           type: "string",
           required: false,
+        },
+      },
+      databaseHooks: {
+        user: {
+          create: {
+            before: async (user) => {
+              if (!isValidProfileImage(user.image)) {
+                throw new APIError("BAD_REQUEST", { message: "Profile image must be a valid HTTPS URL" });
+              }
+            },
+          },
+          update: {
+            before: async (user) => {
+              if ("image" in user && !isValidProfileImage(user.image)) {
+                throw new APIError("BAD_REQUEST", { message: "Profile image must be a valid HTTPS URL" });
+              }
+            },
+          },
         },
       },
     },

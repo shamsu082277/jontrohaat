@@ -15,6 +15,7 @@ const PROTECTED_PREFIXES = [
   "/dashboard/owner",
   "/dashboard/admin",
   "/payment",
+  "/equipment/",
 ];
 
 function hasSessionCookie(req: NextRequest): boolean {
@@ -48,5 +49,6 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/payment/:path*",
+    "/equipment/:path*",
   ],
 };
