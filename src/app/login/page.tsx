@@ -59,7 +59,7 @@ function LoginForm() {
           callbackUrl?.startsWith(`${rolePrefix}/`) ||
           callbackUrl === rolePrefix ||
           callbackUrl?.startsWith("/payment/");
-        router.replace(canResumeCallback ? callbackUrl : rolePath);
+        router.replace(canResumeCallback && callbackUrl ? callbackUrl : rolePath);
         router.refresh();
       }
     } catch (err) {
@@ -77,7 +77,7 @@ function LoginForm() {
     try {
       await signIn.social({
         provider: "google",
-        callbackURL: callbackUrl,
+        callbackURL: callbackUrl || "/login",
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Google লগইনে ত্রুটি হয়েছে";
