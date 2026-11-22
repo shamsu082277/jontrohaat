@@ -95,6 +95,14 @@ npm run build
 npm run start
 ```
 
+### Express API integration
+
+The Next.js client uses the centralized API client and Better Auth JWT plugin. Copy the frontend `.env.example` to `.env.local`; set `NEXT_PUBLIC_API_URL` to the Express API origin. For local development, run the client on port `3000` and the API from the sibling `jontrohaat-server` directory on port `5000`.
+
+The Express service has its own `.env.example`, setup instructions, and endpoint list in [`../jontrohaat-server/README.md`](../jontrohaat-server/README.md). Configure MongoDB, Stripe test keys, ImgBB, JWKS and CORS on the server only. Do not define MongoDB, Stripe secret/webhook, or ImgBB credentials under `NEXT_PUBLIC_*`.
+
+For production, set `NEXT_PUBLIC_APP_URL` to the actual Vercel frontend URL and `NEXT_PUBLIC_API_URL` to the Vercel backend origin (for example, `https://<backend-project>.vercel.app`, without a trailing `/api`). Set Better Auth's `BETTER_AUTH_URL` and Google OAuth callback to the production frontend origin. On the backend, allow the exact frontend origin in `CLIENT_URL`. The application has not been deployed; hosted URLs and end-to-end live integrations are not available yet.
+
 ---
 
 ## 📜 License

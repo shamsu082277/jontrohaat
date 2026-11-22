@@ -1,7 +1,7 @@
 import { authClient } from "./auth-client";
 import { ApiResponse } from "@/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === "production" ? "" : "http://localhost:5000");
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
@@ -52,6 +52,10 @@ export async function apiClient<T = unknown>(
     headers: customHeaders = {},
     ...customConfig
   } = options;
+
+  if (!API_BASE_URL && !endpoint.startsWith("http")) {
+    throw new ApiError("NEXT_PUBLIC_API_URL must be configured for production", 0);
+  }
 
   let url = endpoint.startsWith("http")
     ? endpoint

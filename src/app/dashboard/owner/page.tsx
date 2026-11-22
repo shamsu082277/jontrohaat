@@ -16,7 +16,6 @@ import {
   PlusCircle,
   TrendingUp,
   Calendar,
-  AlertCircle,
 } from "lucide-react";
 import {
   ResponsiveContainer,

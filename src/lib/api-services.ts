@@ -32,7 +32,7 @@ export const equipmentService = {
   getById: (id: string) =>
     apiClient<Equipment>(`/api/equipment/${id}`, { requiresAuth: false }),
 
-  create: (data: Partial<Equipment> & { rentalPrice?: number; availableQuantity?: number; rentalTerms?: string }) =>
+  create: (data: Partial<Equipment> & { image?: string; rentalPrice?: number; availableQuantity?: number; rentalTerms?: string }) =>
     apiClient<Equipment>("/api/equipment", { method: "POST", body: data }),
 
   update: (id: string, data: Partial<Equipment>) =>
@@ -121,6 +121,8 @@ export const adminService = {
     }>("/api/admin/analytics"),
   approveEquipment: (id: string, status: "approved" | "rejected") =>
     apiClient<Equipment>(`/api/admin/equipment/${id}/status`, { method: "PATCH", body: { status } }),
+  deleteEquipment: (id: string) =>
+    apiClient<{ deleted: boolean }>(`/api/admin/equipment/${id}`, { method: "DELETE", body: { confirm: true } }),
 };
 
 export const imageUploadService = {

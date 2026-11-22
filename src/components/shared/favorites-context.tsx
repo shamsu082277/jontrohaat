@@ -2,81 +2,73 @@
 
 import * as React from "react";
 import { toast } from "sonner";
+import { useSession } from "@/lib/auth-client";
+import { favoritesService, profileService } from "@/lib/api-services";
 
 interface FavoritesContextType {
   favorites: string[];
   isFavorite: (id: string) => boolean;
-  toggleFavorite: (id: string, title?: string) => void;
+  toggleFavorite: (id: string, title?: string) => Promise<boolean>;
 }
 
-const FavoritesContext = React.createContext<FavoritesContextType | undefined>(
-  undefined
-);
-
-const STORAGE_KEY = "jontrohaat_favorites";
-
-let listeners: Array<() => void> = [];
-let cachedFavorites: string[] = [];
-let cachedRaw: string | null = null;
-
-function getSnapshot(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw !== cachedRaw) {
-      cachedRaw = raw;
-      cachedFavorites = raw ? JSON.parse(raw) : [];
-    }
-    return cachedFavorites;
-  } catch {
-    return [];
-  }
-}
-
-const getServerSnapshot = () => [];
-
-function subscribe(onStoreChange: () => void) {
-  listeners.push(onStoreChange);
-  window.addEventListener("storage", onStoreChange);
-  return () => {
-    listeners = listeners.filter((l) => l !== onStoreChange);
-    window.removeEventListener("storage", onStoreChange);
-  };
-}
-
-function notify() {
-  for (const listener of listeners) {
-    listener();
-  }
-}
+const FavoritesContext = React.createContext<FavoritesContextType | undefined>(undefined);
 
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
-  const favorites = React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [favorites, setFavorites] = React.useState<string[]>([]);
+  const [isCustomer, setIsCustomer] = React.useState(false);
+  const session = useSession();
+  const userId = session.data?.user?.id;
 
-  const toggleFavorite = React.useCallback((id: string, title?: string) => {
-    const current = getSnapshot();
-    const exists = current.includes(id);
-    const next = exists ? current.filter((item) => item !== id) : [...current, id];
+  React.useEffect(() => {
+    let active = true;
+    if (userId) {
+      profileService.getMe()
+        .then(async (profile) => {
+          if (!active) return;
+          const customer = profile.data?.role === "customer";
+          setIsCustomer(customer);
+          if (!customer) {
+            setFavorites([]);
+            return;
+          }
+          const response = await favoritesService.getAll();
+          if (active) setFavorites((response.data || []).map((equipment) => equipment._id));
+        })
+        .catch((error) => {
+          if (active) toast.error(error instanceof Error ? error.message : "Favorites could not be loaded");
+        });
+    }
+    return () => { active = false; };
+  }, [userId]);
+
+  const toggleFavorite = React.useCallback(async (id: string, title?: string) => {
+    if (!userId || !isCustomer) {
+      toast.error("Sign in as a customer to save favorites");
+      return false;
+    }
+    const exists = favorites.includes(id);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignore
+      if (exists) {
+        await favoritesService.remove(id);
+        setFavorites((current) => current.filter((item) => item !== id));
+        toast.info(title ? `${title} পছন্দের তালিকা থেকে সরানো হয়েছে` : "Removed from favorites");
+      } else {
+        await favoritesService.add(id);
+        setFavorites((current) => current.includes(id) ? current : [...current, id]);
+        toast.success(title ? `${title} পছন্দের তালিকায় যুক্ত হয়েছে` : "Added to favorites");
+      }
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Favorite could not be updated");
+      return false;
     }
-    notify();
-    if (exists) {
-      toast.info(title ? `${title} পছন্দের তালিকা থেকে সরানো হয়েছে` : "Removed from favorites");
-    } else {
-      toast.success(title ? `${title} পছন্দের তালিকায় যুক্ত হয়েছে` : "Added to favorites");
-    }
-  }, []);
+  }, [favorites, isCustomer, userId]);
 
-  const isFavorite = React.useCallback(
-    (id: string) => favorites.includes(id),
-    [favorites]
-  );
+  const visibleFavorites = React.useMemo(() => userId ? favorites : [], [favorites, userId]);
+  const isFavorite = React.useCallback((id: string) => visibleFavorites.includes(id), [visibleFavorites]);
 
   return (
-    <FavoritesContext.Provider value={{ favorites, isFavorite, toggleFavorite }}>
+    <FavoritesContext.Provider value={{ favorites: visibleFavorites, isFavorite, toggleFavorite }}>
       {children}
     </FavoritesContext.Provider>
   );
@@ -84,8 +76,6 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
 export function useFavorites() {
   const context = React.useContext(FavoritesContext);
-  if (!context) {
-    throw new Error("useFavorites must be used within a FavoritesProvider");
-  }
+  if (!context) throw new Error("useFavorites must be used within a FavoritesProvider");
   return context;
 }

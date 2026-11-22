@@ -3,18 +3,32 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useFavorites } from "@/components/shared/favorites-context";
-import { SAMPLE_EQUIPMENTS } from "@/lib/fixtures";
+import { favoritesService } from "@/lib/api-services";
+import { Equipment } from "@/types";
 import { formatBDT } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, MapPin, Trash2, ArrowRight, Tractor, AlertCircle } from "lucide-react";
+import { Heart, MapPin, Trash2, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function CustomerFavoritesPage() {
   const { favorites, toggleFavorite } = useFavorites();
+  const [favoriteEquipments, setFavoriteEquipments] = useState<Equipment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const favoriteEquipments = SAMPLE_EQUIPMENTS.filter((eq) =>
-    favorites.includes(eq._id)
-  );
+  useEffect(() => {
+    favoritesService.getAll()
+      .then((response) => setFavoriteEquipments(response.data || []))
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Favorites could not be loaded"))
+      .finally(() => setLoading(false));
+  }, [favorites]);
+
+  const removeFavorite = async (id: string, title: string) => {
+    if (await toggleFavorite(id, title)) {
+      setFavoriteEquipments((items) => items.filter((item) => item._id !== id));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -25,7 +39,9 @@ export default function CustomerFavoritesPage() {
         </p>
       </div>
 
-      {favoriteEquipments.length > 0 ? (
+      {loading ? (
+        <div className="p-8 text-center text-xs text-muted-foreground">লোড হচ্ছে...</div>
+      ) : favoriteEquipments.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {favoriteEquipments.map((eq) => (
             <div
@@ -45,7 +61,7 @@ export default function CustomerFavoritesPage() {
                     {eq.category}
                   </Badge>
                   <button
-                    onClick={() => toggleFavorite(eq._id, eq.title)}
+                    onClick={() => removeFavorite(eq._id, eq.title)}
                     className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/60 text-rose-400 hover:bg-black/80 flex items-center justify-center transition-colors cursor-pointer"
                     title="Remove from favorites"
                   >

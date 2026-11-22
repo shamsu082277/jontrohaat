@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   AlertCircle,
   CreditCard,
-  ArrowRight,
   Tractor,
 } from "lucide-react";
 import { toast } from "sonner";

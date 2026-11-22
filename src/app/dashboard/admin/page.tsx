@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ADMIN_MONTHLY_REVENUE, DEMO_USERS, DEMO_RENTALS } from "@/lib/dashboard-fixtures";
-import { SAMPLE_EQUIPMENTS } from "@/lib/fixtures";
+import { Equipment, User } from "@/types";
+import { adminService } from "@/lib/api-services";
 import { formatBDT } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,9 +15,8 @@ import {
   CheckCircle2,
   TrendingUp,
   DollarSign,
-  Shield,
-  ArrowRight,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   ResponsiveContainer,
   BarChart,
@@ -29,12 +28,25 @@ import {
 } from "recharts";
 
 export default function AdminOverviewPage() {
-  const totalUsers = 48;
-  const totalEquipment = SAMPLE_EQUIPMENTS.length;
-  const totalBookings = 126;
-  const pendingApprovals = 3;
-  const completedRentals = 94;
-  const totalRevenue = 340000;
+  const [analytics, setAnalytics] = useState<{
+    totalUsers: number; totalEquipment: number; totalBookings: number; pendingApprovals: number;
+    completedRentals: number; totalRevenue: number; monthlyBookings: { _id: string; bookings: number }[];
+    categoryStatistics: { _id: string; count: number }[];
+  }>();
+  const [pendingEquipment, setPendingEquipment] = useState<Equipment[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    Promise.all([adminService.getStats(), adminService.getEquipment(), adminService.getUsers()])
+      .then(([stats, equipment, registeredUsers]) => {
+        setAnalytics(stats.data);
+        setPendingEquipment((equipment.data || []).filter((item) => item.status === "pending").slice(0, 3));
+        setUsers((registeredUsers.data || []).slice(0, 4));
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Admin dashboard could not be loaded"));
+  }, []);
+
+  const monthlyBookings = analytics?.monthlyBookings.map((item) => ({ month: item._id, bookings: item.bookings })) || [];
 
   return (
     <div className="space-y-8">
@@ -53,7 +65,7 @@ export default function AdminOverviewPage() {
             <span className="text-[11px] font-semibold">Total Users</span>
             <Users className="h-4 w-4 text-brand-forest dark:text-brand-fresh" />
           </div>
-          <div className="text-2xl font-black text-foreground">{totalUsers}</div>
+          <div className="text-2xl font-black text-foreground">{analytics?.totalUsers ?? "—"}</div>
           <div className="text-[10px] text-muted-foreground">নিবন্ধিত কৃষক ও মালিক</div>
         </div>
 
@@ -62,7 +74,7 @@ export default function AdminOverviewPage() {
             <span className="text-[11px] font-semibold">Total Equipment</span>
             <Wrench className="h-4 w-4 text-brand-leaf" />
           </div>
-          <div className="text-2xl font-black text-foreground">{totalEquipment}</div>
+          <div className="text-2xl font-black text-foreground">{analytics?.totalEquipment ?? "—"}</div>
           <div className="text-[10px] text-muted-foreground">প্ল্যাটফর্মে যন্ত্রপাতি</div>
         </div>
 
@@ -71,7 +83,7 @@ export default function AdminOverviewPage() {
             <span className="text-[11px] font-semibold">Total Bookings</span>
             <Calendar className="h-4 w-4 text-brand-forest dark:text-brand-fresh" />
           </div>
-          <div className="text-2xl font-black text-foreground">{totalBookings}</div>
+          <div className="text-2xl font-black text-foreground">{analytics?.totalBookings ?? "—"}</div>
           <div className="text-[10px] text-muted-foreground">মোট বুকিং আদেশ</div>
         </div>
 
@@ -81,7 +93,7 @@ export default function AdminOverviewPage() {
             <Clock className="h-4 w-4 text-amber-500" />
           </div>
           <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
-            {pendingApprovals}
+            {analytics?.pendingApprovals ?? "—"}
           </div>
           <div className="text-[10px] text-muted-foreground">অপেক্ষমান মেশিন</div>
         </div>
@@ -91,19 +103,19 @@ export default function AdminOverviewPage() {
             <span className="text-[11px] font-semibold">Completed</span>
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-black text-emerald-600">{completedRentals}</div>
+          <div className="text-2xl font-black text-emerald-600">{analytics?.completedRentals ?? "—"}</div>
           <div className="text-[10px] text-muted-foreground">সম্পন্ন ভাড়া</div>
         </div>
 
         <div className="rounded-2xl border border-brand-leaf/30 bg-brand-forest/10 dark:bg-brand-forest/25 p-4 space-y-1 shadow-xs">
           <div className="flex items-center justify-between text-brand-forest dark:text-brand-fresh">
-            <span className="text-[11px] font-bold">Total Volume</span>
+            <span className="text-[11px] font-bold">Paid Revenue</span>
             <DollarSign className="h-4 w-4" />
           </div>
           <div className="text-xl font-black text-brand-forest dark:text-brand-fresh">
-            {formatBDT(totalRevenue)}
+            {formatBDT(analytics?.totalRevenue || 0)}
           </div>
-          <div className="text-[10px] text-muted-foreground">মোট মার্কেটপ্লেস ভলিউম</div>
+          <div className="text-[10px] text-muted-foreground">আদায়কৃত বুকিং পেমেন্ট</div>
         </div>
       </div>
 
@@ -113,29 +125,27 @@ export default function AdminOverviewPage() {
           <div>
             <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-brand-leaf" />
-              <span>মার্কেটপ্লেস রাজস্ব ও অর্ডার ভলিউম (Platform Revenue & Booking Volume)</span>
+              <span>মাসভিত্তিক বুকিং (Monthly Bookings)</span>
             </h2>
             <p className="text-xs text-muted-foreground font-bengali">
-              গত ৬ মাসের প্ল্যাটফর্ম প্রবৃদ্ধি বিশ্লেষণ
+              MongoDB-তে থাকা বাস্তব বুকিংয়ের পরিসংখ্যান
             </p>
           </div>
-          <Badge variant="harvest" className="text-xs font-bold text-neutral-900">
-            Rapid Growth in Aman & Boro Seasons
-          </Badge>
+          <Badge variant="harvest" className="text-xs font-bold text-neutral-900">All bookings</Badge>
         </div>
 
         <div className="h-64 w-full pt-2">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={ADMIN_MONTHLY_REVENUE}>
+            <BarChart data={monthlyBookings}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
               <XAxis dataKey="month" stroke="#888888" fontSize={11} />
               <YAxis
                 stroke="#888888"
                 fontSize={11}
-                tickFormatter={(val) => `৳${val / 1000}k`}
+                tickFormatter={(val) => `${val}`}
               />
               <Tooltip
-                formatter={(value) => [formatBDT(Number(value) || 0), "Platform Volume"]}
+                formatter={(value) => [Number(value) || 0, "Bookings"]}
                 contentStyle={{
                   backgroundColor: "var(--card)",
                   borderColor: "var(--border)",
@@ -143,10 +153,23 @@ export default function AdminOverviewPage() {
                   fontSize: "12px",
                 }}
               />
-              <Bar dataKey="revenue" fill="#174C32" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="bookings" fill="#174C32" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+        <h2 className="text-sm font-bold text-foreground">Equipment by category</h2>
+        {analytics?.categoryStatistics.length ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {analytics.categoryStatistics.map((category) => (
+              <div key={category._id} className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3 text-xs">
+                <span className="font-semibold text-foreground">{category._id || "Uncategorized"}</span>
+                <span className="font-black text-brand-leaf">{category.count}</span>
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-xs text-muted-foreground">No equipment category data.</p>}
       </div>
 
       {/* Quick Administration Tables */}
@@ -162,7 +185,7 @@ export default function AdminOverviewPage() {
             </Link>
           </div>
           <div className="space-y-2.5">
-            {SAMPLE_EQUIPMENTS.slice(4, 7).map((eq) => (
+            {pendingEquipment.map((eq) => (
               <div key={eq._id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
                 <div>
                   <div className="font-semibold text-foreground line-clamp-1">{eq.title}</div>
@@ -187,7 +210,7 @@ export default function AdminOverviewPage() {
             </Link>
           </div>
           <div className="space-y-2.5">
-            {DEMO_USERS.slice(0, 4).map((u) => (
+            {users.map((u) => (
               <div key={u.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
                 <div>
                   <div className="font-semibold text-foreground">{u.name}</div>

@@ -8,7 +8,7 @@ import { equipmentService, ownerService } from "@/lib/api-services";
 import { formatBDT } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Edit, Trash2, ShieldAlert, ArrowRight } from "lucide-react";
+import { PlusCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function OwnerEquipmentPage() {
@@ -16,7 +16,6 @@ export default function OwnerEquipmentPage() {
   const [loading, setLoading] = useState(true);
 
   const loadEquipment = () => {
-    setLoading(true);
     ownerService.getEquipment()
       .then((response) => setEquipmentList(response.data || []))
       .catch((error) => toast.error(error instanceof Error ? error.message : "Equipment could not be loaded"))

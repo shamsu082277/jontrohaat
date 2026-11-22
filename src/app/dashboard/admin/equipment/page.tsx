@@ -1,35 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { SAMPLE_EQUIPMENTS } from "@/lib/fixtures";
 import { formatBDT } from "@/lib/utils";
 import { Equipment, EquipmentStatus } from "@/types";
+import { adminService } from "@/lib/api-services";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Trash2, ExternalLink } from "lucide-react";
+import { Check, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminEquipmentPage() {
-  const [equipmentList, setEquipmentList] = useState<Equipment[]>(
-    SAMPLE_EQUIPMENTS.map((eq, i) => ({
-      ...eq,
-      status: i === 4 ? "pending" : i === 5 ? "rejected" : ("approved" as EquipmentStatus),
-    }))
-  );
+  const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleStatusChange = (id: string, status: EquipmentStatus, title: string) => {
-    setEquipmentList((prev) =>
-      prev.map((eq) => (eq._id === id ? { ...eq, status } : eq))
-    );
-    toast.success(`"${title}" এর স্ট্যাটাস আপডেট হয়েছে: ${status.toUpperCase()}`);
+  const loadEquipment = () => {
+    adminService.getEquipment()
+      .then((response) => setEquipmentList(response.data || []))
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Equipment could not be loaded"))
+      .finally(() => setLoading(false));
+  };
+  useEffect(() => { loadEquipment(); }, []);
+
+  const handleStatusChange = async (id: string, status: EquipmentStatus, title: string) => {
+    try {
+      const response = await adminService.approveEquipment(id, status as "approved" | "rejected");
+      if (response.data) setEquipmentList((prev) => prev.map((eq) => eq._id === id ? response.data! : eq));
+      toast.success(`"${title}" এর স্ট্যাটাস আপডেট হয়েছে: ${status.toUpperCase()}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Equipment status could not be updated");
+    }
   };
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string) => {
     if (confirm(`আপনি কি নিশ্চিত যে "${title}" স্থায়ীভাবে ডিলিট করতে চান?`)) {
-      setEquipmentList((prev) => prev.filter((eq) => eq._id !== id));
-      toast.success("যন্ত্রপাতি ডিলিট করা হয়েছে");
+      try {
+        await adminService.deleteEquipment(id);
+        setEquipmentList((prev) => prev.filter((eq) => eq._id !== id));
+        toast.success("যন্ত্রপাতি ডিলিট করা হয়েছে");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Equipment could not be deleted");
+      }
     }
   };
 
@@ -56,7 +67,11 @@ export default function AdminEquipmentPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {equipmentList.map((eq) => (
+              {loading ? (
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
+              ) : equipmentList.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">কোনো equipment পাওয়া যায়নি।</td></tr>
+              ) : equipmentList.map((eq) => (
                 <tr key={eq._id} className="hover:bg-muted/30 transition-colors">
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">

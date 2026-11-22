@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ImageUpload } from "@/components/image-upload/image-upload";
 import { CATEGORIES, BANGLADESH_DISTRICTS, BANGLADESH_DIVISIONS } from "@/lib/fixtures";
 import { EquipmentCategory } from "@/types";
-import { Tractor, Sparkles, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { equipmentService } from "@/lib/api-services";

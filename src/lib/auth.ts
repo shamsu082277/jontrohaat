@@ -5,11 +5,21 @@ import { jwt } from "better-auth/plugins";
 async function createAuth() {
   const { default: clientPromise, getDatabase } = await import("./mongodb");
   const db = await getDatabase();
+  const baseURL =
+    process.env.BETTER_AUTH_URL ||
+    (process.env.NODE_ENV === "production"
+      ? process.env.NEXT_PUBLIC_APP_URL
+      : "http://localhost:3000");
+  if (!baseURL) {
+    throw new Error("BETTER_AUTH_URL must be configured for production");
+  }
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (process.env.NODE_ENV === "production" && (!secret || secret.length < 32)) {
+    throw new Error("BETTER_AUTH_SECRET must be at least 32 characters in production");
+  }
   return betterAuth({
-    baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
-    secret:
-      process.env.BETTER_AUTH_SECRET ||
-      "temporary-development-secret-at-least-32-chars",
+    baseURL,
+    secret: secret || "temporary-development-secret-at-least-32-chars",
     database: mongodbAdapter(db, {
       client: await clientPromise,
     }),

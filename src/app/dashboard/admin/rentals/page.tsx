@@ -5,8 +5,6 @@ import { formatBDT, formatDate } from "@/lib/utils";
 import { Booking } from "@/types";
 import { bookingService } from "@/lib/api-services";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { FileText, Calendar, User, Phone, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminRentalsPage() {

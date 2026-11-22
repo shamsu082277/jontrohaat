@@ -1,22 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { DEMO_USERS } from "@/lib/dashboard-fixtures";
+import { useState, useEffect } from "react";
 import { formatDate } from "@/lib/utils";
 import { User, UserRole } from "@/types";
-import { Button } from "@/components/ui/button";
+import { adminService } from "@/lib/api-services";
 import { Badge } from "@/components/ui/badge";
-import { Users, Shield, UserCheck, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>(DEMO_USERS);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-    );
-    toast.success(`ব্যবহারকারীর রোল পরিবর্তন করা হয়েছে: ${newRole.toUpperCase()}`);
+  useEffect(() => {
+    adminService.getUsers()
+      .then((response) => setUsers(response.data || []))
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Users could not be loaded"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+    try {
+      const response = await adminService.updateUserRole(userId, newRole);
+      if (response.data) setUsers((prev) => prev.map((u) => u.id === userId ? response.data! : u));
+      toast.success(`ব্যবহারকারীর রোল পরিবর্তন করা হয়েছে: ${newRole.toUpperCase()}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "User role could not be changed");
+    }
   };
 
   return (
@@ -42,7 +51,11 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {users.map((u) => (
+              {loading ? (
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
+              ) : users.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">কোনো user পাওয়া যায়নি।</td></tr>
+              ) : users.map((u) => (
                 <tr key={u.id} className="hover:bg-muted/30 transition-colors">
                   <td className="py-3.5 px-4 font-bold text-foreground">
                     {u.name}

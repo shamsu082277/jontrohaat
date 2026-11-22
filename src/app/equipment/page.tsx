@@ -1,17 +1,19 @@
 "use client";
 
-import { Suspense, useState, useMemo } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { EquipmentCard } from "@/components/shared/equipment-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  SAMPLE_EQUIPMENTS,
   CATEGORIES,
   BANGLADESH_DISTRICTS,
   BANGLADESH_DIVISIONS,
 } from "@/lib/fixtures";
+import { Equipment } from "@/types";
+import { equipmentService } from "@/lib/api-services";
+import { toast } from "sonner";
 import {
   Search,
   SlidersHorizontal,
@@ -43,9 +45,14 @@ function EquipmentContent() {
 
   // Local mobile filter drawer state
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [equipmentItems, setEquipmentItems] = useState<Equipment[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   // Helper to update URL params
   const updateParams = (updates: Record<string, string | null>) => {
+    setLoading(true);
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
       if (value === null || value === "" || value === "all" || value === "All" || value === "All Districts" || value === "All Divisions") {
@@ -62,85 +69,37 @@ function EquipmentContent() {
   };
 
   const handleResetFilters = () => {
+    setLoading(true);
     router.push(pathname);
   };
 
-  // Filter & sort logic
-  const filteredEquipment = useMemo(() => {
-    return SAMPLE_EQUIPMENTS.filter((item) => {
-      // Search
-      if (searchParam) {
-        const query = searchParam.toLowerCase();
-        const matchesTitle = item.title.toLowerCase().includes(query);
-        const matchesBangla = item.banglaTitle?.toLowerCase().includes(query);
-        const matchesDesc = item.description.toLowerCase().includes(query);
-        const matchesDistrict = item.location.district.toLowerCase().includes(query);
-        if (!matchesTitle && !matchesBangla && !matchesDesc && !matchesDistrict) {
-          return false;
-        }
-      }
-
-      // Category
-      if (categoryParam !== "All" && item.category !== categoryParam) {
-        return false;
-      }
-
-      // District
-      if (districtParam !== "All Districts" && item.location.district !== districtParam) {
-        return false;
-      }
-
-      // Division
-      if (divisionParam !== "All Divisions" && item.location.division !== divisionParam) {
-        return false;
-      }
-
-      // Rental Type
-      if (rentalTypeParam !== "all" && item.rentalType !== rentalTypeParam) {
-        return false;
-      }
-
-      // Availability
-      if (availabilityParam === "available_now" && item.isAvailable === false) {
-        return false;
-      }
-
-      // Min Price
-      if (minPriceParam && item.pricePerDay < Number(minPriceParam)) {
-        return false;
-      }
-
-      // Max Price
-      if (maxPriceParam && item.pricePerDay > Number(maxPriceParam)) {
-        return false;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      if (sortByParam === "price_asc") return a.pricePerDay - b.pricePerDay;
-      if (sortByParam === "price_desc") return b.pricePerDay - a.pricePerDay;
-      if (sortByParam === "rating") return (b.averageRating || 0) - (a.averageRating || 0);
-      // default "newest"
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  const currentPage = Math.max(1, pageParam || 1);
+  useEffect(() => {
+    let active = true;
+    equipmentService.getAll({
+      search: searchParam || undefined,
+      category: categoryParam !== "All" ? categoryParam : undefined,
+      district: districtParam !== "All Districts" ? districtParam : undefined,
+      division: divisionParam !== "All Divisions" ? divisionParam : undefined,
+      rentalType: rentalTypeParam !== "all" ? rentalTypeParam : undefined,
+      availability: availabilityParam,
+      minPrice: minPriceParam ? Number(minPriceParam) : undefined,
+      maxPrice: maxPriceParam ? Number(maxPriceParam) : undefined,
+      sortBy: sortByParam as "price_asc" | "price_desc" | "newest" | "rating",
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+    }).then((response) => {
+      if (!active) return;
+      setEquipmentItems(response.data?.items || []);
+      setTotalItems(response.data?.pagination.total || 0);
+      setTotalPages(Math.max(1, response.data?.pagination.pages || 1));
+    }).catch((error) => {
+      if (active) toast.error(error instanceof Error ? error.message : "Equipment could not be loaded");
+    }).finally(() => {
+      if (active) setLoading(false);
     });
-  }, [
-    searchParam,
-    categoryParam,
-    districtParam,
-    divisionParam,
-    rentalTypeParam,
-    availabilityParam,
-    minPriceParam,
-    maxPriceParam,
-    sortByParam,
-  ]);
-
-  // Pagination
-  const totalItems = filteredEquipment.length;
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
-  const currentPage = Math.min(Math.max(1, pageParam), totalPages);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedEquipment = filteredEquipment.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    return () => { active = false; };
+  }, [searchParam, categoryParam, districtParam, divisionParam, rentalTypeParam, availabilityParam, minPriceParam, maxPriceParam, sortByParam, currentPage]);
 
   const hasActiveFilters = Boolean(
     searchParam ||
@@ -253,11 +212,10 @@ function EquipmentContent() {
                 }`}
               >
                 <span>All Categories</span>
-                <span>{SAMPLE_EQUIPMENTS.length}</span>
+                <span>{totalItems}</span>
               </button>
 
               {CATEGORIES.map((cat) => {
-                const count = SAMPLE_EQUIPMENTS.filter((eq) => eq.category === cat.id).length;
                 const active = categoryParam === cat.id;
                 return (
                   <button
@@ -270,7 +228,7 @@ function EquipmentContent() {
                     }`}
                   >
                     <span>{cat.name}</span>
-                    <span className="text-[11px] opacity-75">{count}</span>
+                    <span className="text-[11px] opacity-75">{active ? totalItems : ""}</span>
                   </button>
                 );
               })}
@@ -339,6 +297,26 @@ function EquipmentContent() {
                 }`}
               >
                 Per Day
+              </button>
+              <button
+                onClick={() => updateParams({ rentalType: "per_hour" })}
+                className={`rounded-lg py-1.5 px-2 border text-center transition-colors cursor-pointer ${
+                  rentalTypeParam === "per_hour"
+                    ? "border-brand-leaf bg-brand-leaf/10 font-bold text-brand-forest dark:text-brand-fresh"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Per Hour
+              </button>
+              <button
+                onClick={() => updateParams({ rentalType: "per_acre" })}
+                className={`rounded-lg py-1.5 px-2 border text-center transition-colors cursor-pointer ${
+                  rentalTypeParam === "per_acre"
+                    ? "border-brand-leaf bg-brand-leaf/10 font-bold text-brand-forest dark:text-brand-fresh"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Per Acre
               </button>
             </div>
           </div>
@@ -464,7 +442,7 @@ function EquipmentContent() {
           <div className="text-xs text-muted-foreground flex items-center justify-between">
             <span>
               Showing{" "}
-              <strong className="text-foreground">{paginatedEquipment.length}</strong> of{" "}
+              <strong className="text-foreground">{equipmentItems.length}</strong> of{" "}
               <strong className="text-foreground">{totalItems}</strong> equipment
             </span>
             <span>
@@ -473,9 +451,13 @@ function EquipmentContent() {
           </div>
 
           {/* Equipment Cards Grid */}
-          {paginatedEquipment.length > 0 ? (
+          {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {paginatedEquipment.map((equipment, idx) => (
+              {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => <Skeleton key={index} className="h-80 rounded-2xl" />)}
+            </div>
+          ) : equipmentItems.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {equipmentItems.map((equipment, idx) => (
                 <EquipmentCard
                   key={equipment._id}
                   equipment={equipment}

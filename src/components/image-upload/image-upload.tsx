@@ -2,8 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { UploadCloud, X, Loader2, Image as ImageIcon, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { UploadCloud, X, Loader2, AlertCircle } from "lucide-react";
 import { imageUploadService } from "@/lib/api-services";
 import { toast } from "sonner";
 

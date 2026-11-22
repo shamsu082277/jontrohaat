@@ -37,7 +37,6 @@ export default function EquipmentDetailsPage() {
 
   useEffect(() => {
     let active = true;
-    setLoadingEquipment(true);
     equipmentService.getById(equipmentId)
       .then((response) => {
         if (active) setEquipment(response.data);
@@ -111,6 +110,7 @@ export default function EquipmentDetailsPage() {
   // Booking Form Submission
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!equipment) return;
 
     if (!contactNumber.trim()) {
       toast.error("যোগাযোগের জন্য সচল মোবাইল নম্বর দিন");

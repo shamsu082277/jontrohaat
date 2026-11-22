@@ -1,13 +1,15 @@
 import { MongoClient } from "mongodb";
 
-const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/jontrohaat";
+const uri = process.env.MONGODB_URI || (process.env.NODE_ENV === "production" ? "" : "mongodb://127.0.0.1:27017/jontrohaat");
+if (!uri || uri === "your_mongodb_connection_string") {
+  throw new Error("MONGODB_URI must be configured for production");
+}
 const dbName = process.env.DB_NAME || "jontrohaat";
 
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
 declare global {
-  // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 

@@ -11,6 +11,7 @@ export interface User {
   role: UserRole;
   image?: string | null;
   phone?: string;
+  address?: string;
   district?: string;
   division?: string;
   createdAt: string | Date;
