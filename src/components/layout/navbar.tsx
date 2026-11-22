@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useSession, signOut } from "@/lib/auth-client";
+import { dashboardPathForRole, getUserRole } from "@/lib/roles";
 import { toast } from "sonner";
 import {
   Tractor,
@@ -33,13 +34,7 @@ export function Navbar() {
   const { data: session } = useSession();
 
   const currentUser = session?.user;
-  const userRole = (currentUser as unknown as { role?: string })?.role || "customer";
-
-  const getDashboardHref = (role: string) => {
-    if (role === "admin") return "/dashboard/admin";
-    if (role === "owner") return "/dashboard/owner";
-    return "/dashboard/customer/rentals";
-  };
+  const userRole = getUserRole(currentUser) || "customer";
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,7 +180,7 @@ export function Navbar() {
                     </div>
 
                     <Link
-                      href={getDashboardHref(userRole)}
+                      href={dashboardPathForRole(userRole)}
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
                     >
@@ -332,7 +327,7 @@ export function Navbar() {
 
               <div className="space-y-1 pt-1">
                 <Link
-                  href={getDashboardHref(userRole)}
+                  href={dashboardPathForRole(userRole)}
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 py-2 text-xs font-semibold text-foreground"
                 >

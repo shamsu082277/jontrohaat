@@ -63,6 +63,12 @@ async function createAuth() {
       jwt({
         jwt: {
           expirationTime: "7d",
+          definePayload: ({ user }) => ({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          }),
         },
       }),
     ],

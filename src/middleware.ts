@@ -17,8 +17,6 @@ const PROTECTED_PREFIXES = [
   "/payment",
 ];
 
-const AUTH_PAGES = ["/login", "/register"];
-
 function hasSessionCookie(req: NextRequest): boolean {
   // Better Auth session cookies
   const sessionToken =
@@ -33,7 +31,6 @@ export function middleware(req: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix)
   );
-  const isAuthPage = AUTH_PAGES.some((page) => pathname.startsWith(page));
   const isAuthenticated = hasSessionCookie(req);
 
   // Redirect unauthenticated users away from protected routes
@@ -44,14 +41,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated users away from login/register pages
-  if (isAuthPage && isAuthenticated) {
-    const dashboardUrl = req.nextUrl.clone();
-    dashboardUrl.pathname = "/dashboard/customer/rentals";
-    dashboardUrl.search = "";
-    return NextResponse.redirect(dashboardUrl);
-  }
-
   return NextResponse.next();
 }
 
@@ -59,7 +48,5 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/payment/:path*",
-    "/login",
-    "/register",
   ],
 };

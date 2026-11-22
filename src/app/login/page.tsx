@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "@/lib/auth-client";
+import { authClient, signIn, useSession } from "@/lib/auth-client";
+import { dashboardPathForRole, getUserRole } from "@/lib/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tractor, Mail, Lock, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
@@ -12,13 +13,23 @@ import { toast } from "sonner";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard/customer";
+  const callbackUrl = searchParams.get("callbackUrl");
+  const { data: session, isPending: sessionPending } = useSession();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sessionPending && session?.user) {
+      const role = getUserRole(session.user);
+      if (role) {
+        router.replace(dashboardPathForRole(role));
+      }
+    }
+  }, [router, session, sessionPending]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +46,20 @@ function LoginForm() {
         setError(res.error.message || "লগইন ব্যর্থ হয়েছে। ইমেল এবং পাসওয়ার্ড সঠিক কিনা পরীক্ষা করুন।");
         toast.error("Invalid email or password");
       } else {
+        const sessionResponse = await authClient.getSession();
+        const role = getUserRole(sessionResponse.data?.user);
+        if (!role) {
+          throw new Error("আপনার অ্যাকাউন্টের ভূমিকা যাচাই করা যায়নি।");
+        }
+
         toast.success("সফলভাবে লগইন হয়েছে! স্বাগতম।");
-        router.push(callbackUrl);
+        const rolePath = dashboardPathForRole(role);
+        const rolePrefix = `/dashboard/${role}`;
+        const canResumeCallback =
+          callbackUrl?.startsWith(`${rolePrefix}/`) ||
+          callbackUrl === rolePrefix ||
+          callbackUrl?.startsWith("/payment/");
+        router.replace(canResumeCallback ? callbackUrl : rolePath);
         router.refresh();
       }
     } catch (err) {
