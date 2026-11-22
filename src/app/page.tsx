@@ -616,7 +616,7 @@ export default function HomePage() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 text-sm font-semibold"
+                  className="border-white/30 text-white hover:bg-black bg-green-[#174C32] text-sm font-semibold"
                 >
                   <Link href="/equipment">
                     <span>বর্তমানে তালিকাভুক্ত যন্ত্র দেখুন</span>

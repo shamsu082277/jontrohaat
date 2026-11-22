@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Route guard middleware for JontroHaat.
+ * Route guard proxy for JontroHaat.
  *
  * Strategy: Session cookie check only (UX guard).
  * Real authorization is enforced by the Express backend via JWT/JWKS.
@@ -25,7 +25,7 @@ function hasSessionCookie(req: NextRequest): boolean {
   return Boolean(sessionToken);
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>

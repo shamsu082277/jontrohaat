@@ -22,9 +22,13 @@ export type EquipmentCategory =
   | "Power Tillers"
   | "Tractors"
   | "Harvesters"
+  | "Rice Transplanters"
   | "Irrigation Pumps"
   | "Sprayers"
-  | "Threshers";
+  | "Threshers"
+  | "Reapers"
+  | "Seed Drills"
+  | "Rotavators";
 
 export type EquipmentStatus = "pending" | "approved" | "rejected";
 
@@ -58,6 +62,7 @@ export interface Equipment {
   description: string;
   category: EquipmentCategory;
   pricePerDay: number;
+  priceIsEstimate?: boolean;
   rentalType?: RentalType;
   securityDeposit?: number;
   quantity: number;
