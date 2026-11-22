@@ -3,10 +3,29 @@ import {
   Equipment,
   Booking,
   EquipmentFilterParams,
+  EquipmentLocation,
   PaginatedResponse,
+  EquipmentCategory,
+  RentalType,
   User,
   UserRole,
 } from "@/types";
+
+export interface EquipmentUpdateInput {
+  title?: string;
+  description?: string;
+  category?: EquipmentCategory;
+  location?: EquipmentLocation;
+  rentalPrice?: number;
+  rentalType?: RentalType;
+  availableQuantity?: number;
+  securityDeposit?: number;
+  condition?: string;
+  brand?: string;
+  model?: string;
+  images?: string[];
+  rentalTerms?: string;
+}
 
 export const equipmentService = {
   getAll: (params?: EquipmentFilterParams) => {
@@ -34,7 +53,7 @@ export const equipmentService = {
   create: (data: Partial<Equipment> & { images?: string[]; rentalPrice?: number; availableQuantity?: number; rentalTerms?: string }) =>
     apiClient<Equipment>("/api/equipment", { method: "POST", body: data }),
 
-  update: (id: string, data: Partial<Equipment>) =>
+  update: (id: string, data: EquipmentUpdateInput) =>
     apiClient<Equipment>(`/api/equipment/${id}`, { method: "PATCH", body: data }),
 
   getByIdForOwner: (id: string) =>
@@ -121,8 +140,10 @@ export const adminService = {
       monthlyBookings: { _id: string; bookings: number }[];
       categoryStatistics: { _id: string; count: number }[];
     }>("/api/admin/analytics"),
-  approveEquipment: (id: string, status: "approved" | "rejected") =>
+  approveEquipment: (id: string, status: Equipment["status"]) =>
     apiClient<Equipment>(`/api/admin/equipment/${id}/status`, { method: "PATCH", body: { status } }),
+  updateEquipment: (id: string, data: EquipmentUpdateInput) =>
+    apiClient<Equipment>(`/api/admin/equipment/${id}`, { method: "PATCH", body: data }),
   deleteEquipment: (id: string) =>
     apiClient<{ deleted: boolean }>(`/api/admin/equipment/${id}`, { method: "DELETE", body: { confirm: true } }),
 };

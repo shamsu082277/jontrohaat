@@ -109,10 +109,10 @@ export default function OwnerEquipmentPage() {
 
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <Badge
-                      variant={eq.status === "approved" ? "available" : "unavailable"}
+                      variant={eq.status === "approved" ? "available" : eq.status === "rejected" ? "destructive" : "unavailable"}
                       className="text-[10px] uppercase font-bold"
                     >
-                      {eq.status === "approved" ? "Approved • অনুমোদিত" : "Pending • অপেক্ষমান"}
+                      {eq.status === "approved" ? "Approved • অনুমোদিত" : eq.status === "rejected" ? "Rejected • প্রত্যাখ্যাত" : "Pending • অপেক্ষমান"}
                     </Badge>
                   </td>
 
@@ -120,6 +120,9 @@ export default function OwnerEquipmentPage() {
                     <div className="flex items-center justify-end gap-1.5">
                       <Button asChild size="sm" variant="outline" className="h-8 text-xs">
                         <Link href={`/equipment/${eq._id}`}>ভিউ</Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+                        <Link href={`/dashboard/owner/equipment/${eq._id}/edit`}>Update</Link>
                       </Button>
                       <Button asChild size="sm" variant="outline" className="h-8 text-xs">
                         <Link href={`/dashboard/owner/equipment/${eq._id}/images`}>ছবি</Link>

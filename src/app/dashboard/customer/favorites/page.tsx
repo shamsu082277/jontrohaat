@@ -16,12 +16,26 @@ export default function CustomerFavoritesPage() {
   const { favorites, toggleFavorite } = useFavorites();
   const [favoriteEquipments, setFavoriteEquipments] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
     favoritesService.getAll()
-      .then((response) => setFavoriteEquipments(response.data || []))
-      .catch((error) => toast.error(error instanceof Error ? error.message : "Favorites could not be loaded"))
-      .finally(() => setLoading(false));
+      .then((response) => {
+        if (active) setFavoriteEquipments(response.data || []);
+      })
+      .catch((loadError) => {
+        if (!active) return;
+        const message = loadError instanceof Error ? loadError.message : "Favorites could not be loaded";
+        setError(message);
+        toast.error(message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
   }, [favorites]);
 
   const removeFavorite = async (id: string, title: string) => {
@@ -41,59 +55,54 @@ export default function CustomerFavoritesPage() {
 
       {loading ? (
         <div className="p-8 text-center text-xs text-muted-foreground">লোড হচ্ছে...</div>
-      ) : favoriteEquipments.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {favoriteEquipments.map((eq) => (
-            <div
-              key={eq._id}
-              className="group rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative aspect-[16/10] w-full bg-muted overflow-hidden">
-                  <SafeImage
-                    src={eq.images?.[0]}
-                    alt={eq.title}
-                    fill
-                    sizes="(max-width: 640px) 100vw, 300px"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <Badge variant="forest" className="absolute top-3 left-3 text-[10px]">
-                    {eq.category}
-                  </Badge>
-                  <button
-                    onClick={() => removeFavorite(eq._id, eq.title)}
-                    className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/60 text-rose-400 hover:bg-black/80 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Remove from favorites"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="p-4 space-y-2">
-                  <h3 className="font-bold text-sm text-foreground line-clamp-1 group-hover:text-brand-forest dark:group-hover:text-brand-fresh transition-colors">
-                    {eq.title}
-                  </h3>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5 text-brand-harvest" />
-                    <span>{eq.location.district}, {eq.location.division}</span>
-                  </div>
-                  <div className="text-base font-black text-brand-forest dark:text-brand-fresh pt-1">
-                    {formatBDT(eq.pricePerDay)} <span className="text-xs text-muted-foreground font-normal">/ day</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 pt-0 border-t border-border flex items-center justify-between gap-2 mt-2">
-                <Button asChild size="sm" variant="brand" className="w-full text-xs font-semibold">
-                  <Link href={`/equipment/${eq._id}`}>
-                    <span>View Details</span>
-                    <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          ))}
+      ) : error ? (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center text-sm text-destructive">
+          {error}
         </div>
+      ) : favoriteEquipments.length > 0 ? (
+        <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-xs">
+          <table className="w-full min-w-[700px] text-left text-xs">
+            <thead className="border-b border-border bg-muted/50 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3">Equipment</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Rental Price</th>
+                <th className="px-4 py-3">Location</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {favoriteEquipments.map((eq) => (
+                <tr key={eq._id} className="hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+                        <SafeImage src={eq.images?.[0]} alt={eq.title} fill sizes="64px" className="object-cover" />
+                      </div>
+                      <span className="font-bold text-foreground">{eq.title}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3"><Badge variant="forest">{eq.category}</Badge></td>
+                  <td className="px-4 py-3 font-bold text-brand-forest dark:text-brand-fresh">
+                    {formatBDT(eq.pricePerDay)} <span className="font-normal text-muted-foreground">/ {eq.rentalType === "per_hour" ? "hour" : eq.rentalType === "per_acre" ? "acre" : "day"}</span>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-brand-harvest" />{eq.location.district}, {eq.location.division}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-2">
+                      <Button asChild size="sm" variant="brand">
+                        <Link href={`/equipment/${eq._id}`}>View Details <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => removeFavorite(eq._id, eq.title)} aria-label={`Remove ${eq.title} from favorites`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
       ) : (
         <div className="rounded-2xl border border-dashed border-border p-12 text-center space-y-3 bg-card">
           <Heart className="h-10 w-10 text-muted-foreground mx-auto" />

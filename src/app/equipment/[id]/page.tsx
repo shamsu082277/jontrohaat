@@ -489,9 +489,7 @@ export default function EquipmentDetailsPage() {
               </div>
               <div className="rounded-lg bg-muted/40 p-2 text-center">
                 <div className="text-muted-foreground text-[10px]">Owner Helpline</div>
-                <div className="font-bold text-foreground">
-                  {equipment.ownerPhone || "01712-XXXXXX"}
-                </div>
+                <div className="font-bold text-foreground">Shared after booking confirmation</div>
               </div>
             </div>
           </div>

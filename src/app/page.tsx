@@ -39,6 +39,7 @@ export default function HomePage() {
   const [featuredEquipment, setFeaturedEquipment] = useState<Equipment[]>([]);
   const [recentEquipment, setRecentEquipment] = useState<Equipment[]>([]);
   const [equipmentCount, setEquipmentCount] = useState(0);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -50,7 +51,7 @@ export default function HomePage() {
       setEquipmentCount(recent.data?.pagination.total || 0);
     }).catch((error) => {
       toast.error(error instanceof Error ? error.message : "Homepage equipment could not be loaded");
-    });
+    }).finally(() => setFeaturedLoading(false));
   }, []);
 
   const handleHeroSearch = (e: React.FormEvent) => {
@@ -313,19 +314,35 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredEquipment.map((eq, idx) => (
-              <motion.div
-                key={eq._id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.08 }}
-              >
-                <EquipmentCard equipment={eq} />
-              </motion.div>
-            ))}
-          </div>
+          {featuredLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-label="Loading featured equipment">
+              {Array.from({ length: 6 }, (_, index) => (
+                <div key={index} className="h-80 animate-pulse rounded-2xl bg-muted" />
+              ))}
+            </div>
+          ) : featuredEquipment.length < 6 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center">
+              <Tractor className="mx-auto h-10 w-10 text-muted-foreground" />
+              <h3 className="mt-3 text-base font-bold text-foreground">Featured equipment is coming soon</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Six approved and available listings are needed to display the featured collection.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredEquipment.slice(0, 6).map((eq, idx) => (
+                <motion.div
+                  key={eq._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: idx * 0.08 }}
+                >
+                  <EquipmentCard equipment={eq} />
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

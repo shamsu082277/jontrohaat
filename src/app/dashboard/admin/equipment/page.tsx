@@ -7,6 +7,7 @@ import { Equipment, EquipmentStatus } from "@/types";
 import { adminService } from "@/lib/api-services";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { Check, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,7 +25,7 @@ export default function AdminEquipmentPage() {
 
   const handleStatusChange = async (id: string, status: EquipmentStatus, title: string) => {
     try {
-      const response = await adminService.approveEquipment(id, status as "approved" | "rejected");
+      const response = await adminService.approveEquipment(id, status);
       if (response.data) setEquipmentList((prev) => prev.map((eq) => eq._id === id ? response.data! : eq));
       toast.success(`"${title}" এর স্ট্যাটাস আপডেট হয়েছে: ${status.toUpperCase()}`);
     } catch (error) {
@@ -62,15 +63,16 @@ export default function AdminEquipmentPage() {
                 <th className="py-3 px-4">মালিকের নাম (Owner)</th>
                 <th className="py-3 px-4">ক্যাটাগরি</th>
                 <th className="py-3 px-4">দৈনিক ভাড়া</th>
+                <th className="py-3 px-4">মজুদ</th>
                 <th className="py-3 px-4">স্ট্যাটাস</th>
                 <th className="py-3 px-4 text-right">মডারেশন অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
               ) : equipmentList.length === 0 ? (
-                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">কোনো equipment পাওয়া যায়নি।</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">কোনো equipment পাওয়া যায়নি।</td></tr>
               ) : equipmentList.map((eq) => (
                 <tr key={eq._id} className="hover:bg-muted/30 transition-colors">
                   <td className="py-3.5 px-4">
@@ -102,6 +104,8 @@ export default function AdminEquipmentPage() {
                   <td className="py-3.5 px-4 font-black text-brand-forest dark:text-brand-fresh whitespace-nowrap">
                     {formatBDT(eq.pricePerDay)}
                   </td>
+
+                  <td className="py-3.5 px-4 font-bold">{eq.quantity}</td>
 
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <Badge
@@ -142,6 +146,19 @@ export default function AdminEquipmentPage() {
                           <span>Reject</span>
                         </Button>
                       )}
+                      {eq.status !== "pending" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleStatusChange(eq._id, "pending", eq.title)}
+                          className="h-7 text-[11px] px-2.5"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                      <Button asChild size="sm" variant="outline" className="h-7 text-[11px] px-2.5">
+                        <Link href={`/dashboard/admin/equipment/${eq._id}/edit`}>Update</Link>
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
