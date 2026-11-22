@@ -143,19 +143,15 @@ export function Navbar() {
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className="flex items-center gap-2 h-9 rounded-full border border-border pl-1.5 pr-3 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
               >
-                <div className="h-6 w-6 rounded-full bg-brand-forest text-brand-cream overflow-hidden flex items-center justify-center text-[11px] font-bold">
-                  {currentUser.image ? (
-                    <SafeImage
-                      src={currentUser.image}
-                      fallbackSrc="/images/avatar-placeholder.svg"
-                      alt={currentUser.name || "User"}
-                      width={24}
-                      height={24}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    currentUser.name?.[0]?.toUpperCase() || "U"
-                  )}
+                <div className="h-6 w-6 rounded-full bg-muted overflow-hidden flex items-center justify-center">
+                  <SafeImage
+                    src={currentUser.image}
+                    fallbackSrc="/images/avatar-placeholder.svg"
+                    alt={`${currentUser.name || "User"} avatar`}
+                    width={24}
+                    height={24}
+                    className="h-full w-full rounded-full object-cover"
+                  />
                 </div>
                 <span className="max-w-[100px] truncate">{currentUser.name || "User"}</span>
                 <ChevronDown className="h-3 w-3 text-muted-foreground" />
@@ -303,19 +299,15 @@ export function Navbar() {
           {currentUser ? (
             <div className="py-4 border-b border-border space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-brand-forest text-brand-cream overflow-hidden flex items-center justify-center text-xs font-bold shrink-0">
-                  {currentUser.image ? (
-                    <SafeImage
-                      src={currentUser.image}
-                      fallbackSrc="/images/avatar-placeholder.svg"
-                      alt={currentUser.name || "User"}
-                      width={36}
-                      height={36}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    currentUser.name?.[0]?.toUpperCase() || "U"
-                  )}
+                <div className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center shrink-0">
+                  <SafeImage
+                    src={currentUser.image}
+                    fallbackSrc="/images/avatar-placeholder.svg"
+                    alt={`${currentUser.name || "User"} avatar`}
+                    width={36}
+                    height={36}
+                    className="h-full w-full rounded-full object-cover"
+                  />
                 </div>
                 <div className="overflow-hidden">
                   <div className="font-bold text-xs text-foreground truncate">

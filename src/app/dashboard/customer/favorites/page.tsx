@@ -20,11 +20,12 @@ export default function CustomerFavoritesPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError(null);
     favoritesService.getAll()
       .then((response) => {
-        if (active) setFavoriteEquipments(response.data || []);
+        if (active) {
+          setError(null);
+          setFavoriteEquipments(response.data || []);
+        }
       })
       .catch((loadError) => {
         if (!active) return;
@@ -103,6 +104,7 @@ export default function CustomerFavoritesPage() {
               ))}
             </tbody>
           </table>
+        </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-border p-12 text-center space-y-3 bg-card">
           <Heart className="h-10 w-10 text-muted-foreground mx-auto" />

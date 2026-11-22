@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUrlList } from "@/components/shared/image-url-list";
+import { SafeImage } from "@/components/shared/safe-image";
 import { useSession } from "@/lib/auth-client";
 import { profileService } from "@/lib/api-services";
 import { Shield } from "lucide-react";
@@ -38,7 +39,7 @@ export default function AdminProfilePage() {
     setSaving(true);
     try {
       await profileService.updateMe({ name, phone, image });
-      await refreshSession();
+      await refreshSession({ query: { disableCookieCache: true } });
       toast.success("এডমিন প্রোফাইল সফলভাবে আপডেট হয়েছে!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Profile could not be updated");
@@ -67,15 +68,30 @@ export default function AdminProfilePage() {
           </div>
         </div>
 
-        <ImageUrlList
-          value={image ? [image] : []}
-          onChange={(urls) => setImage(urls[0] || "")}
-          onValidityChange={setImageValid}
-          label="Admin profile image URL"
-          helperText="Host your profile image externally and paste its HTTPS image URL."
-          maxItems={1}
-          allowEmpty
-        />
+        <div className="space-y-2 border-b border-border pb-5">
+          <div className="flex items-center gap-4">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+              <SafeImage
+                src={image}
+                fallbackSrc="/images/avatar-placeholder.svg"
+                alt={`${name || "Admin"} profile avatar`}
+                fill
+                sizes="96px"
+                className="rounded-full object-cover"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Admin profile avatar preview</p>
+          </div>
+          <ImageUrlList
+            value={image ? [image] : []}
+            onChange={(urls) => setImage(urls[0] || "")}
+            onValidityChange={setImageValid}
+            label="Admin profile image URL"
+            helperText="Host your profile image externally and paste its HTTPS image URL."
+            maxItems={1}
+            allowEmpty
+          />
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">

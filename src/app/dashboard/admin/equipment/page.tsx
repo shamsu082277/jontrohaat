@@ -14,14 +14,33 @@ import { toast } from "sonner";
 export default function AdminEquipmentPage() {
   const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadEquipment = () => {
+    setLoading(true);
+    setLoadError(null);
     adminService.getEquipment()
       .then((response) => setEquipmentList(response.data || []))
-      .catch((error) => toast.error(error instanceof Error ? error.message : "Equipment could not be loaded"))
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "Equipment could not be loaded";
+        setLoadError(message);
+        toast.error(message);
+      })
       .finally(() => setLoading(false));
   };
-  useEffect(() => { loadEquipment(); }, []);
+  useEffect(() => {
+    let active = true;
+    adminService.getEquipment()
+      .then((response) => { if (active) setEquipmentList(response.data || []); })
+      .catch((error) => {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : "Equipment could not be loaded";
+        setLoadError(message);
+        toast.error(message);
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const handleStatusChange = async (id: string, status: EquipmentStatus, title: string) => {
     try {
@@ -71,6 +90,8 @@ export default function AdminEquipmentPage() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
+              ) : loadError ? (
+                <tr><td colSpan={7} className="p-8 text-center text-destructive">{loadError} <button className="ml-2 underline" onClick={loadEquipment}>Retry</button></td></tr>
               ) : equipmentList.length === 0 ? (
                 <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">কোনো equipment পাওয়া যায়নি।</td></tr>
               ) : equipmentList.map((eq) => (

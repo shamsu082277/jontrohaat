@@ -68,21 +68,21 @@ async function createAuth() {
           required: false,
         },
       },
-      databaseHooks: {
-        user: {
-          create: {
-            before: async (user) => {
-              if (!isValidProfileImage(user.image)) {
-                throw new APIError("BAD_REQUEST", { message: "Profile image must be a valid HTTPS URL" });
-              }
-            },
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => {
+            if (!isValidProfileImage(user.image)) {
+              throw new APIError("BAD_REQUEST", { message: "Profile image must be a valid HTTPS URL" });
+            }
           },
-          update: {
-            before: async (user) => {
-              if ("image" in user && !isValidProfileImage(user.image)) {
-                throw new APIError("BAD_REQUEST", { message: "Profile image must be a valid HTTPS URL" });
-              }
-            },
+        },
+        update: {
+          before: async (user) => {
+            if ("image" in user && !isValidProfileImage(user.image)) {
+              throw new APIError("BAD_REQUEST", { message: "Profile image must be a valid HTTPS URL" });
+            }
           },
         },
       },

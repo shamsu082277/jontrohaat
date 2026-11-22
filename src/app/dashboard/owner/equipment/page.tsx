@@ -14,15 +14,34 @@ import { toast } from "sonner";
 export default function OwnerEquipmentPage() {
   const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadEquipment = () => {
+    setLoading(true);
+    setLoadError(null);
     ownerService.getEquipment()
       .then((response) => setEquipmentList(response.data || []))
-      .catch((error) => toast.error(error instanceof Error ? error.message : "Equipment could not be loaded"))
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "Equipment could not be loaded";
+        setLoadError(message);
+        toast.error(message);
+      })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadEquipment(); }, []);
+  useEffect(() => {
+    let active = true;
+    ownerService.getEquipment()
+      .then((response) => { if (active) setEquipmentList(response.data || []); })
+      .catch((error) => {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : "Equipment could not be loaded";
+        setLoadError(message);
+        toast.error(message);
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const handleDelete = async (id: string, title: string) => {
     if (confirm(`আপনি কি নিশ্চিত যে "${title}" তালিকা থেকে মুছে ফেলতে চান?`)) {
@@ -69,6 +88,8 @@ export default function OwnerEquipmentPage() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</td></tr>
+              ) : loadError ? (
+                <tr><td colSpan={6} className="p-8 text-center text-destructive">{loadError} <button className="ml-2 underline" onClick={loadEquipment}>Retry</button></td></tr>
               ) : equipmentList.length === 0 ? (
                 <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">আপনার কোনো equipment listing নেই।</td></tr>
               ) : equipmentList.map((eq) => (

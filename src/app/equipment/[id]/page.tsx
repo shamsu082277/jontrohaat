@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Equipment } from "@/types";
 import { bookingService, equipmentService, paymentService } from "@/lib/api-services";
+import { ApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/lib/utils";
@@ -34,21 +35,31 @@ export default function EquipmentDetailsPage() {
   const equipmentId = params?.id;
   const [equipment, setEquipment] = useState<Equipment | undefined>();
   const [loadingEquipment, setLoadingEquipment] = useState(true);
+  const [equipmentNotFound, setEquipmentNotFound] = useState(false);
+  const [equipmentLoadError, setEquipmentLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
     equipmentService.getById(equipmentId)
-      .then((response) => {
-        if (active) setEquipment(response.data);
+      .then(({ data }) => {
+        if (!active) return;
+        setEquipmentLoadError(false);
+        setEquipmentNotFound(false);
+        if (data) setEquipment(data);
+        else setEquipmentNotFound(true);
       })
-      .catch(() => {
-        if (active) setEquipment(undefined);
+      .catch((error: unknown) => {
+        if (!active) return;
+        setEquipment(undefined);
+        if (error instanceof ApiError && error.status === 404) setEquipmentNotFound(true);
+        else setEquipmentLoadError(true);
       })
       .finally(() => {
         if (active) setLoadingEquipment(false);
       });
     return () => { active = false; };
-  }, [equipmentId]);
+  }, [equipmentId, loadAttempt]);
 
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = equipment ? isFavorite(equipment._id) : false;
@@ -165,7 +176,26 @@ export default function EquipmentDetailsPage() {
     return <div className="container-haat py-20 text-center text-sm text-muted-foreground">যন্ত্রপাতির তথ্য লোড হচ্ছে...</div>;
   }
 
-  if (!equipment) {
+  if (equipmentLoadError) {
+    return (
+      <div className="container-haat py-20 text-center space-y-4">
+        <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
+        <h1 className="text-2xl font-bold text-foreground">Equipment could not be loaded</h1>
+        <Button
+          variant="brand"
+          onClick={() => {
+            setEquipmentLoadError(false);
+            setLoadingEquipment(true);
+            setLoadAttempt((attempt) => attempt + 1);
+          }}
+        >
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
+  if (equipmentNotFound || !equipment) {
     return (
       <div className="container-haat py-20 text-center space-y-4">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground">

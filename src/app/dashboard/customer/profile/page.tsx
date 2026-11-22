@@ -6,6 +6,7 @@ import { profileService } from "@/lib/api-services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUrlList } from "@/components/shared/image-url-list";
+import { SafeImage } from "@/components/shared/safe-image";
 import { User, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,7 +48,7 @@ export default function CustomerProfilePage() {
     setSaving(true);
     try {
       await profileService.updateMe({ name, phone, district, division, address, image: avatar });
-      await refreshSession();
+      await refreshSession({ query: { disableCookieCache: true } });
       toast.success("প্রোফাইল তথ্য সফলভাবে আপডেট হয়েছে!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Profile could not be updated");
@@ -69,6 +70,19 @@ export default function CustomerProfilePage() {
         {/* External Profile Image URL */}
         <div className="space-y-2 border-b border-border pb-5">
           <label className="font-semibold text-foreground">Profile Picture (প্রোফাইল ছবি)</label>
+          <div className="flex items-center gap-4">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+              <SafeImage
+                src={avatar}
+                fallbackSrc="/images/avatar-placeholder.svg"
+                alt={`${name || "User"} profile avatar`}
+                fill
+                sizes="96px"
+                className="rounded-full object-cover"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Your profile avatar preview</p>
+          </div>
           <ImageUrlList
             value={avatar ? [avatar] : []}
             onChange={(urls) => setAvatar(urls[0] || "")}

@@ -40,6 +40,7 @@ export default function HomePage() {
   const [recentEquipment, setRecentEquipment] = useState<Equipment[]>([]);
   const [equipmentCount, setEquipmentCount] = useState(0);
   const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [featuredError, setFeaturedError] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -50,6 +51,7 @@ export default function HomePage() {
       setRecentEquipment(recent.data?.items || []);
       setEquipmentCount(recent.data?.pagination.total || 0);
     }).catch((error) => {
+      setFeaturedError(true);
       toast.error(error instanceof Error ? error.message : "Homepage equipment could not be loaded");
     }).finally(() => setFeaturedLoading(false));
   }, []);
@@ -319,6 +321,10 @@ export default function HomePage() {
               {Array.from({ length: 6 }, (_, index) => (
                 <div key={index} className="h-80 animate-pulse rounded-2xl bg-muted" />
               ))}
+            </div>
+          ) : featuredError ? (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-12 text-center text-sm text-destructive">
+              Featured equipment could not be loaded. Please try again later.
             </div>
           ) : featuredEquipment.length < 6 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center">

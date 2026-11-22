@@ -3,27 +3,34 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signUp, signIn } from "@/lib/auth-client";
+import { signUp, signIn, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tractor, User, Mail, Lock, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { ImageUrlList } from "@/components/shared/image-url-list";
+import { isSecureImageUrl } from "@/components/shared/image-url-list";
+import { SafeImage } from "@/components/shared/safe-image";
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refetch: refreshSession } = useSession();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard/customer";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [profileImage, setProfileImage] = useState<string[]>([]);
-  const [profileImageValid, setProfileImageValid] = useState(true);
+  const [profileImage, setProfileImage] = useState("");
+  const [loadedProfileImage, setLoadedProfileImage] = useState("");
+  const [failedProfileImage, setFailedProfileImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const profileImageUrl = profileImage.trim();
+  const profileImageValid =
+    !profileImageUrl ||
+    (isSecureImageUrl(profileImageUrl) && loadedProfileImage === profileImageUrl);
 
   // Validate password rules:
   // - Minimum six characters
@@ -59,6 +66,15 @@ function RegisterForm() {
       return;
     }
 
+    if (profileImageUrl && !profileImageValid) {
+      const message = isSecureImageUrl(profileImageUrl)
+        ? "Wait for the profile image preview to load, or use another image URL."
+        : "Enter a valid HTTPS profile image URL.";
+      setError(message);
+      toast.error(message);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -66,13 +82,14 @@ function RegisterForm() {
         name,
         email,
         password,
-        image: profileImage[0] || undefined,
+        image: profileImageUrl || undefined,
       });
 
       if (res.error) {
         setError(res.error.message || "নিবন্ধন ব্যর্থ হয়েছে। পুনরায় চেষ্টা করুন।");
         toast.error(res.error.message || "Registration failed");
       } else {
+        await refreshSession({ query: { disableCookieCache: true } });
         toast.success("নিবন্ধন সফল হয়েছে! স্বাগতম যন্ত্রহাটে।");
         router.push(callbackUrl);
         router.refresh();
@@ -161,15 +178,49 @@ function RegisterForm() {
           />
         </div>
 
-        <ImageUrlList
-          value={profileImage}
-          onChange={setProfileImage}
-          onValidityChange={setProfileImageValid}
-          label="Profile Image URL (optional)"
-          helperText="Paste an HTTPS image URL hosted by an external service. No image files are uploaded."
-          maxItems={1}
-          allowEmpty
-        />
+        <div className="space-y-2">
+          <label htmlFor="profile-image-url" className="font-semibold text-foreground">
+            Profile Image URL (optional)
+          </label>
+          <div className="flex items-center gap-3">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+              <SafeImage
+                src={profileImageUrl}
+                fallbackSrc="/images/avatar-placeholder.svg"
+                alt={`${name || "User"} profile image preview`}
+                fill
+                sizes="64px"
+                className="rounded-full object-cover"
+                onLoad={() => setLoadedProfileImage(profileImageUrl)}
+                onError={() => setFailedProfileImage(profileImageUrl)}
+              />
+            </div>
+            <Input
+              id="profile-image-url"
+              type="url"
+              value={profileImage}
+              onChange={(event) => {
+                setProfileImage(event.target.value);
+                setLoadedProfileImage("");
+                setFailedProfileImage("");
+              }}
+              placeholder="https://..."
+              disabled={loading || googleLoading}
+              aria-invalid={Boolean(profileImageUrl) && !isSecureImageUrl(profileImageUrl)}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {profileImageUrl
+              ? !isSecureImageUrl(profileImageUrl)
+                ? "Enter a valid HTTPS image URL."
+                : loadedProfileImage === profileImageUrl
+                  ? "Image preview loaded."
+                  : failedProfileImage === profileImageUrl
+                    ? "Image could not be loaded. Try another URL."
+                    : "Checking image URL…"
+              : "Paste an HTTPS image URL hosted externally. No image files are uploaded."}
+          </p>
+        </div>
 
         <div className="space-y-1.5">
           <label className="font-semibold text-foreground flex items-center gap-1.5">

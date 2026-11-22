@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -126,8 +127,15 @@ export function DashboardShell({ role, children }: DashboardLayoutProps) {
 
           {/* User Badge */}
           <div className="rounded-xl bg-muted/60 p-3 flex items-center gap-3 border border-border/60">
-            <div className="h-10 w-10 rounded-full bg-brand-forest/15 text-brand-forest dark:text-brand-fresh flex items-center justify-center font-bold text-sm shrink-0">
-              {currentUser?.name ? currentUser.name[0]?.toUpperCase() : "U"}
+            <div className="h-10 w-10 overflow-hidden rounded-full bg-muted shrink-0">
+              <SafeImage
+                src={currentUser?.image}
+                fallbackSrc="/images/avatar-placeholder.svg"
+                alt={`${currentUser?.name || "User"} profile avatar`}
+                width={40}
+                height={40}
+                className="h-full w-full rounded-full object-cover"
+              />
             </div>
             <div className="overflow-hidden">
               <div className="text-xs font-bold text-foreground truncate">

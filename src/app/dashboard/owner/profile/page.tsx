@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUrlList } from "@/components/shared/image-url-list";
+import { SafeImage } from "@/components/shared/safe-image";
 import { useSession } from "@/lib/auth-client";
 import { profileService } from "@/lib/api-services";
 import { User, Mail, Phone, MapPin } from "lucide-react";
@@ -44,7 +45,7 @@ export default function OwnerProfilePage() {
     setSaving(true);
     try {
       await profileService.updateMe({ name, phone, district, division, address, image: avatar });
-      await refreshSession();
+      await refreshSession({ query: { disableCookieCache: true } });
       toast.success("মালিক প্রোফাইল তথ্য সফলভাবে আপডেট হয়েছে!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Profile could not be updated");
@@ -65,6 +66,19 @@ export default function OwnerProfilePage() {
       {loading ? <div className="p-8 text-center text-xs text-muted-foreground">লোড হচ্ছে...</div> : <form onSubmit={handleUpdate} className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-5 text-xs">
         <div className="space-y-2 border-b border-border pb-5">
           <label className="font-semibold text-foreground">Business Logo / Profile Image</label>
+          <div className="flex items-center gap-4">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+              <SafeImage
+                src={avatar}
+                fallbackSrc="/images/avatar-placeholder.svg"
+                alt={`${name || "Owner"} profile avatar`}
+                fill
+                sizes="96px"
+                className="rounded-full object-cover"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Your profile avatar preview</p>
+          </div>
           <ImageUrlList
             value={avatar ? [avatar] : []}
             onChange={(urls) => setAvatar(urls[0] || "")}
